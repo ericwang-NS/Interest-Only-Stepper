@@ -1,0 +1,359 @@
+/* ===================================================
+   Income Section — Northspyre High-Fidelity Clone
+   =================================================== */
+
+.inc-page-bg {
+  min-height: 100vh;
+  background-color: #0d1017;
+  padding: 32px 48px;
+  font-family: "Roboto", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Section wrapper */
+.inc-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.inc-section-num {
+  color: #4a5060;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  padding-top: 20px;
+  min-width: 20px;
+  text-align: right;
+}
+
+/* Card */
+.inc-section-card {
+  flex: 1;
+  background-color: #181c24;
+  border-radius: 6px;
+  padding: 24px 32px;
+}
+
+/* ── Header ─────────────────────────────── */
+
+.inc-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 24px;
+}
+
+.inc-section-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.inc-section-subtitle {
+  color: #6c7280;
+  font-size: 13px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.inc-caret {
+  color: #6c7280;
+  transition: transform 0.2s;
+  padding: 4px;
+}
+
+.inc-caret-down {
+  transform: rotate(180deg);
+}
+
+/* ── Body ───────────────────────────────── */
+
+.inc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Table shared styles ────────────────── */
+
+.inc-table-wrap {
+  overflow-x: auto;
+}
+
+.inc-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.inc-table-wrap::-webkit-scrollbar-track {
+  background: #181c24;
+}
+
+.inc-table-wrap::-webkit-scrollbar-thumb {
+  background: #353b47;
+  border-radius: 3px;
+}
+
+.inc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Roboto", sans-serif;
+  font-size: 13px;
+}
+
+/* ── Category header rows ───────────────── */
+
+.inc-cat-header {
+  background-color: #252a33;
+}
+
+.inc-cat-header th {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 12px 16px;
+  white-space: nowrap;
+  border-bottom: 1px solid #1a1e27;
+}
+
+/* Label columns */
+.inc-th-label {
+  text-align: left;
+}
+
+.inc-th-label-wide {
+  text-align: left;
+  min-width: 240px;
+  width: 240px;
+}
+
+.inc-th-plus {
+  color: #0fb3ff;
+  font-size: 14px;
+  font-weight: 400;
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+.inc-th-action {
+  text-align: center;
+  color: #0fb3ff;
+  font-size: 14px;
+  font-weight: 400;
+  width: 32px;
+  min-width: 32px;
+  cursor: pointer;
+}
+
+/* Metric columns */
+.inc-th-metric {
+  text-align: right;
+  min-width: 120px;
+  color: #6c7280;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Month columns */
+.inc-th-month {
+  text-align: right;
+  min-width: 100px;
+  padding: 8px 16px;
+  border-left: 1px solid #1a1e27;
+}
+
+.inc-th-month-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6c7280;
+  letter-spacing: 0.3px;
+}
+
+.inc-th-month-date {
+  font-size: 10px;
+  font-weight: 400;
+  color: #6c7280;
+  margin-top: 1px;
+}
+
+/* ── Data rows ──────────────────────────── */
+
+.inc-row {
+  background-color: #181c24;
+}
+
+.inc-row:hover {
+  background-color: #1c2028;
+}
+
+.inc-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #1a1e27;
+}
+
+/* Label cells */
+.inc-td-label {
+  text-align: left;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.inc-td-label-wide {
+  text-align: left;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 400;
+  min-width: 240px;
+  width: 240px;
+  white-space: nowrap;
+}
+
+.inc-td-action {
+  text-align: center;
+  width: 32px;
+  min-width: 32px;
+}
+
+.inc-td-bold {
+  font-weight: 600;
+}
+
+/* Metric cells */
+.inc-td-metric {
+  text-align: right;
+  color: #ffffff;
+  font-size: 13px;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+/* Month cells */
+.inc-td-month {
+  text-align: right;
+  color: #ffffff;
+  font-size: 13px;
+  white-space: nowrap;
+  border-left: 1px solid #1a1e27;
+  min-width: 100px;
+}
+
+/* ── Value colors ───────────────────────── */
+
+.inc-val-blue {
+  color: #0fb3ff;
+}
+
+.inc-val-muted {
+  color: #6c7280;
+}
+
+.inc-link {
+  cursor: pointer;
+}
+
+.inc-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Total rows ─────────────────────────── */
+
+.inc-row-total {
+  background-color: #1f2430;
+}
+
+.inc-row-total:hover {
+  background-color: #232836;
+}
+
+.inc-row-grand-total {
+  background-color: #252a33;
+}
+
+.inc-row-grand-total:hover {
+  background-color: #2a3040;
+}
+
+.inc-row-grand-total td {
+  border-bottom: 1px solid #2a3040;
+}
+
+/* ── Adjustment rows (two-line label) ───── */
+
+.inc-td-twoline {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: top;
+}
+
+.inc-adj-name {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.inc-adj-from {
+  display: flex;
+}
+
+.inc-adj-dropdown {
+  background-color: #252a33;
+  border: 1px solid #353b47;
+  border-radius: 4px;
+  color: #c0c4cc;
+  font-size: 12px;
+  font-family: "Roboto", sans-serif;
+  padding: 5px 28px 5px 10px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236c7280' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  min-width: 200px;
+}
+
+.inc-adj-dropdown:focus {
+  outline: none;
+  border-color: #0fb3ff;
+}
+
+.inc-adj-dropdown option {
+  background-color: #252a33;
+  color: #c0c4cc;
+}
+
+/* ── Spacing between sub-tables ─────────── */
+
+.inc-body > .inc-table-wrap + .inc-table-wrap {
+  margin-top: 16px;
+}
+
+/* ── Responsive ─────────────────────────── */
+
+@media (max-width: 768px) {
+  .inc-page-bg {
+    padding: 16px;
+  }
+
+  .inc-section-card {
+    padding: 16px 20px;
+  }
+
+  .inc-section-num {
+    display: none;
+  }
+
+  .inc-th-label-wide,
+  .inc-td-label-wide {
+    min-width: 180px;
+    width: 180px;
+  }
+}

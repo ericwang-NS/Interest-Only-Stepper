@@ -1,0 +1,80 @@
+/*
+ * Northspyre Design Tokens
+ * Extracted from production app (deal.northspyre.com)
+ * These override Bootstrap 4 defaults to match Northspyre's brand.
+ */
+
+:root {
+  /* Brand Colors */
+  --primary: #0FB3FF;
+  --secondary: #3B424D;
+
+  /* Semantic Colors */
+  --success: #42d29d;
+  --danger: #fa6767;
+  --warning: #f9bc0d;
+  --info: #44badc;
+
+  /* Extended Palette */
+  --blue: #0FB3FF;
+  --green: #42d29d;
+  --red: #fa6767;
+  --yellow: #f9bc0d;
+  --pink: #ff679b;
+  --orange: #ff9041;
+  --purple: #6b5eae;
+  --indigo: #727cf5;
+  --teal: #02a8b5;
+  --cyan: #44badc;
+
+  /* Neutrals */
+  --white: #fff;
+  --gray: #ced4da;
+  --gray-dark: #e3eaef;
+  --light: #3B424D;
+  --dark: #f1f1f1;
+
+  /* Typography */
+  --font-family-sans-serif: "Roboto", sans-serif;
+  --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Breakpoints (for reference, Bootstrap handles these via media queries) */
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1280px;
+}
+
+/* Override Bootstrap primary color */
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 21px;
+  padding: 7.2px 14.4px;
+  border-radius: 4px;
+  transition: color 0.15s ease-in-out,
+              background-color 0.15s ease-in-out,
+              border-color 0.15s ease-in-out,
+              box-shadow 0.15s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: #0da0e6;
+  border-color: #0d96d9;
+}
+
+.btn-primary:focus,
+.btn-primary.focus {
+  box-shadow: 0 0 0 0.2rem rgba(15, 179, 255, 0.5);
+}
+
+/* Base body styles to match Northspyre */
+body {
+  font-family: var(--font-family-sans-serif);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

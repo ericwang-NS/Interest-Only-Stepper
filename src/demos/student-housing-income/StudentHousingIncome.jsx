@@ -1,0 +1,1039 @@
+import React, { useState, useMemo } from 'react';
+import './StudentHousingIncome.css';
+
+const fmt = (n) => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+const fmtD = (n) => '$' + fmt(Math.abs(n));
+const fmtNeg = (n) => '($' + fmt(Math.abs(n)) + ')';
+
+export default function StudentHousingIncome() {
+  const [activeTab, setActiveTab] = useState('operations');
+  const [collapsed, setCollapsed] = useState(false);
+  const [displayMode, setDisplayMode] = useState('perBed');
+
+  // General Info state
+  const [dealName, setDealName] = useState('Campus View Apartments');
+  const [address, setAddress] = useState('1200 University Ave');
+  const [city, setCity] = useState('Austin');
+  const [county, setCounty] = useState('Travis County');
+  const [giState, setGiState] = useState('Texas');
+  const [zip, setZip] = useState('78705');
+
+  // Key Dates
+  const [startMonth] = useState('August 2027');
+  const [constructionStart] = useState('August 2025');
+  const [constructionDuration, setConstructionDuration] = useState(24);
+  const [holdPeriod, setHoldPeriod] = useState(84);
+
+  // Size
+  const [builtGrossSF, setBuiltGrossSF] = useState(65880);
+  const [efficiencyRatio, setEfficiencyRatio] = useState(85.0);
+  const [numUnits, setNumUnits] = useState(140);
+  const [parkingSpaces, setParkingSpaces] = useState(180);
+  const [buildings, setBuildings] = useState(2);
+  const [stories, setStories] = useState(4);
+  const netRentableSF = Math.round(builtGrossSF * (efficiencyRatio / 100));
+  const sfPerUnit = numUnits > 0 ? Math.round(netRentableSF / numUnits) : 0;
+
+  // Operating info
+  const [leaseUpPct, setLeaseUpPct] = useState(95);
+  const [leaseTerm, setLeaseTerm] = useState(12);
+  const [academicStart, setAcademicStart] = useState('August');
+  const [summerToggle, setSummerToggle] = useState('none');
+  const [summerOccPct, setSummerOccPct] = useState(60);
+  const [summerRentPerBed, setSummerRentPerBed] = useState(500);
+
+  // Bed mix
+  const [rows, setRows] = useState([
+    { id: 1, unitType: '2-Bed / 2-Bath', units: 80, bedsPerUnit: 2, rentPerBed: 850 },
+    { id: 2, unitType: '4-Bed / 4-Bath', units: 60, bedsPerUnit: 4, rentPerBed: 725 },
+  ]);
+
+  // Operating info – additional fields matching platform
+  const [rentGrowth, setRentGrowth] = useState(3.0);
+  const [freeRent, setFreeRent] = useState(0);
+  const [stabilizedFreeRent, setStabilizedFreeRent] = useState(0);
+
+  // Other income
+  const [concessionsPct, setConcessionsPct] = useState(2);
+  const [parking, setParking] = useState(48000);
+  const [rubs, setRubs] = useState(24000);
+  const [furniturePremium, setFurniturePremium] = useState(25);
+  const [otherIncome, setOtherIncome] = useState(12000);
+
+  // Calculations
+  const calcs = useMemo(() => {
+    const totalUnits = rows.reduce((s, r) => s + r.units, 0);
+    const totalBeds = rows.reduce((s, r) => s + r.units * r.bedsPerUnit, 0);
+
+    // Weighted avg rent per bed
+    const weightedRent = totalBeds > 0
+      ? rows.reduce((s, r) => s + r.units * r.bedsPerUnit * r.rentPerBed, 0) / totalBeds
+      : 0;
+
+    const academicRevenue = totalBeds * (leaseUpPct / 100) * weightedRent * leaseTerm;
+    const gapMonths = 12 - leaseTerm;
+    const summerRevenue = (leaseTerm < 12 && summerToggle === 'partial')
+      ? totalBeds * (summerOccPct / 100) * summerRentPerBed * gapMonths
+      : 0;
+    const grossPotentialRent = academicRevenue + summerRevenue;
+
+    // Adjustments
+    const unleasedBeds = grossPotentialRent * ((100 - leaseUpPct) / 100);
+    const concessions = grossPotentialRent * (concessionsPct / 100);
+
+    // Other income
+    const furnitureAnnual = totalBeds * furniturePremium * 12;
+    const totalOther = parking + rubs + furnitureAnnual + otherIncome;
+
+    const totalPotentialIncome = grossPotentialRent - unleasedBeds - concessions + totalOther;
+
+    // Net rentable SF estimate (assume 400 SF/bed for display)
+    const totalSF = totalBeds * 400;
+
+    return {
+      totalUnits, totalBeds, weightedRent,
+      academicRevenue, summerRevenue, grossPotentialRent,
+      unleasedBeds, concessions,
+      furnitureAnnual, totalOther,
+      totalPotentialIncome, totalSF, gapMonths,
+    };
+  }, [rows, leaseUpPct, leaseTerm, summerToggle, summerOccPct, summerRentPerBed,
+      concessionsPct, parking, rubs, furniturePremium, otherIncome]);
+
+  // ── Expense section state & data ──────────────
+  const [expDisplayMode, setExpDisplayMode] = useState('perBed');
+
+  const expenses = useMemo(() => {
+    const beds = calcs.totalBeds || 1;
+    return [
+      { name: 'Property taxes', growth: '3.0%', amount: beds * 1200, millRate: '2.0%' },
+      { name: 'Property insurance', growth: '3.0%', amount: beds * 450 },
+      { name: 'Property management fee', growth: '3.0%', amount: Math.round(calcs.totalPotentialIncome * 0.04) },
+      { name: 'Utilities', growth: '3.0%', amount: beds * 1100 },
+      { name: 'Repairs & maintenance', growth: '3.0%', amount: beds * 500 },
+      { name: 'General & administrative', growth: '3.0%', amount: beds * 350 },
+      { name: 'Marketing & leasing', growth: '3.0%', amount: beds * 400 },
+      { name: 'Turnover & make-ready', growth: '3.0%', amount: beds * 600 },
+      { name: 'Furniture replacement reserve', growth: '3.0%', amount: beds * 200, conditional: true },
+    ];
+  }, [calcs.totalBeds, calcs.totalPotentialIncome]);
+
+  const capex = useMemo(() => {
+    const beds = calcs.totalBeds || 1;
+    return [
+      { name: 'Capital reserves', growth: '3.0%', amount: beds * 300 },
+    ];
+  }, [calcs.totalBeds]);
+
+  const totalOpEx = useMemo(() => {
+    return expenses
+      .filter(e => e.conditional ? furniturePremium > 0 : true)
+      .reduce((s, e) => s + e.amount, 0);
+  }, [expenses, furniturePremium]);
+
+  const totalCapEx = useMemo(() => capex.reduce((s, e) => s + e.amount, 0), [capex]);
+  const noi = calcs.totalPotentialIncome - totalOpEx;
+
+  const expSecondaryLabel = expDisplayMode === 'perBed' ? '$/Bed/year'
+    : expDisplayMode === 'perSF' ? '$/SF/year' : '% of EGI';
+
+  const expSecondaryVal = (amount) => {
+    if (expDisplayMode === 'pctEGI') {
+      return calcs.totalPotentialIncome > 0
+        ? (amount / calcs.totalPotentialIncome * 100).toFixed(2) + '%'
+        : '0.00%';
+    }
+    const divisor = expDisplayMode === 'perBed' ? (calcs.totalBeds || 1) : (calcs.totalSF || 1);
+    return fmtD(amount / divisor);
+  };
+
+  const metricLabel = displayMode === 'perBed' ? '/bed' : displayMode === 'perUnit' ? '/unit' : '/SF';
+  const metricDivisor = displayMode === 'perBed' ? calcs.totalBeds
+    : displayMode === 'perUnit' ? calcs.totalUnits
+    : calcs.totalSF;
+  const perMetric = (val) => metricDivisor > 0 ? fmtD(val / metricDivisor) : '$0';
+
+  const addRow = () => {
+    const nextId = rows.length > 0 ? Math.max(...rows.map(r => r.id)) + 1 : 1;
+    setRows([...rows, { id: nextId, unitType: '', units: 0, bedsPerUnit: 1, rentPerBed: 0 }]);
+  };
+
+  const removeRow = (id) => {
+    if (rows.length > 1) setRows(rows.filter(r => r.id !== id));
+  };
+
+  const updateRow = (id, field, value) => {
+    setRows(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const months = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December'
+  ];
+
+  // Compute monthly lease-up schedule for right panel
+  const leaseUpSchedule = useMemo(() => {
+    const startIdx = months.indexOf(academicStart);
+    const monthlyAbsorption = leaseUpPct > 60 ? ((leaseUpPct - 60) / 6) : 3;
+    const schedule = [];
+    for (let i = 0; i < 7; i++) {
+      const mIdx = (startIdx - 6 + i + 12) % 12;
+      const monthNum = 49 + i;
+      const pct = Math.min(60 + monthlyAbsorption * i, leaseUpPct);
+      schedule.push({
+        month: months[mIdx].substring(0, 3).toUpperCase(),
+        year: monthNum <= 52 ? 2030 : 2031,
+        monthNum,
+        pct: pct.toFixed(2),
+      });
+    }
+    return schedule;
+  }, [academicStart, leaseUpPct, months]);
+
+  const tabs = [
+    { id: 'general', letter: 'A', label: 'General Information' },
+    { id: 'development', letter: 'B', label: 'Development' },
+    { id: 'operations', letter: 'C', label: 'Operations' },
+    { id: 'disposition', letter: 'D', label: 'Disposition' },
+  ];
+
+  return (
+    <div className="sh-page-bg">
+
+      {/* ══════════════════════════════════════════
+          Tab Bar
+          ══════════════════════════════════════════ */}
+      <div className="sh-tab-bar">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`sh-tab ${activeTab === tab.id ? 'sh-tab-active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="sh-tab-letter">{tab.letter}</span>
+            <span className="sh-tab-label">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ══════════════════════════════════════════
+          Tab A: General Information
+          ══════════════════════════════════════════ */}
+      {activeTab === 'general' && (
+        <>
+          {/* ── Section 1: Basic Details ──────── */}
+          <div className="sh-section" style={{ marginBottom: 32 }}>
+            <div className="sh-section-num">1</div>
+            <div className="sh-section-card">
+              <div className="sh-section-header">
+                <div>
+                  <h4 className="sh-section-title">Basic Details</h4>
+                  <p className="sh-section-subtitle">Information about this investment's name and location</p>
+                </div>
+                <div className="sh-header-right">
+                  <div className="sh-caret" role="button" tabIndex={0}>
+                    <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                      <path d="M1 7L7 1L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sh-gi-two-col">
+                <div className="sh-gi-form">
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Deal name</span>
+                    <input className="sh-gi-input" value={dealName} onChange={(e) => setDealName(e.target.value)} />
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Address</span>
+                    <input className="sh-gi-input" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">City</span>
+                    <input className="sh-gi-input" value={city} onChange={(e) => setCity(e.target.value)} />
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">County</span>
+                    <input className="sh-gi-input" value={county} onChange={(e) => setCounty(e.target.value)} />
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">State</span>
+                    <select className="sh-gi-input sh-gi-select" value={giState} onChange={(e) => setGiState(e.target.value)}>
+                      <option>Texas</option><option>New York</option><option>California</option>
+                      <option>Florida</option><option>Georgia</option><option>North Carolina</option>
+                    </select>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Zip</span>
+                    <input className="sh-gi-input" value={zip} onChange={(e) => setZip(e.target.value)} />
+                  </div>
+                </div>
+                <div className="sh-gi-map">
+                  <div className="sh-gi-map-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4a5060" strokeWidth="1.5">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                      <circle cx="12" cy="9" r="2.5"/>
+                    </svg>
+                    <span>Map</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Section 2: Key Dates ──────────── */}
+          <div className="sh-section" style={{ marginBottom: 32 }}>
+            <div className="sh-section-num">2</div>
+            <div className="sh-section-card">
+              <div className="sh-section-header">
+                <div>
+                  <h4 className="sh-section-title">Key Dates</h4>
+                  <p className="sh-section-subtitle">Determine key dates and durations for this pro forma</p>
+                </div>
+                <div className="sh-header-right">
+                  <div className="sh-caret" role="button" tabIndex={0}>
+                    <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                      <path d="M1 7L7 1L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sh-gi-two-col">
+                <div className="sh-gi-form">
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Start month</span>
+                    <div className="sh-gi-input sh-gi-date-field">
+                      <span>{startMonth}</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6c7280" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Construction start</span>
+                    <div className="sh-gi-input sh-gi-date-field">
+                      <span>{constructionStart}</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6c7280" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Construction duration</span>
+                    <div className="sh-stepper sh-stepper-wide">
+                      <button className="sh-stepper-btn" onClick={() => setConstructionDuration(Math.max(1, constructionDuration - 1))}>&#8722;</button>
+                      <span className="sh-stepper-value">{constructionDuration} months</span>
+                      <button className="sh-stepper-btn" onClick={() => setConstructionDuration(constructionDuration + 1)}>+</button>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Hold period</span>
+                    <div className="sh-stepper sh-stepper-wide">
+                      <button className="sh-stepper-btn" onClick={() => setHoldPeriod(Math.max(1, holdPeriod - 1))}>&#8722;</button>
+                      <span className="sh-stepper-value">{holdPeriod} months</span>
+                      <button className="sh-stepper-btn" onClick={() => setHoldPeriod(holdPeriod + 1)}>+</button>
+                    </div>
+                  </div>
+                </div>
+                <div className="sh-gi-computed-col">
+                  <div className="sh-opinfo-infobox">
+                    <span className="sh-opinfo-infobox-label">Sale month</span>
+                    <span className="sh-opinfo-infobox-value">July 2034 (Month {holdPeriod})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Section 3: Size ──────────────── */}
+          <div className="sh-section" style={{ marginBottom: 32 }}>
+            <div className="sh-section-num">3</div>
+            <div className="sh-section-card">
+              <div className="sh-section-header">
+                <div>
+                  <h4 className="sh-section-title">Size</h4>
+                  <p className="sh-section-subtitle">Details about this investment's property size and building</p>
+                </div>
+                <div className="sh-header-right">
+                  <div className="sh-caret" role="button" tabIndex={0}>
+                    <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                      <path d="M1 7L7 1L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sh-gi-two-col">
+                <div className="sh-gi-form">
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Built gross SF</span>
+                    <div className="sh-gi-input-with-unit">
+                      <input className="sh-gi-input" type="number" value={builtGrossSF}
+                        onChange={(e) => setBuiltGrossSF(Number(e.target.value))} />
+                      <span className="sh-gi-unit">ft&sup2;</span>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Efficiency ratio</span>
+                    <div className="sh-gi-input-with-unit">
+                      <input className="sh-gi-input" type="number" value={efficiencyRatio}
+                        onChange={(e) => setEfficiencyRatio(Number(e.target.value))} step="0.01" />
+                      <span className="sh-gi-unit">%</span>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Estimated no. of units</span>
+                    <input className="sh-gi-input" type="number" value={numUnits}
+                      onChange={(e) => setNumUnits(Number(e.target.value))} />
+                  </div>
+                  <div className="sh-gi-row" style={{ paddingLeft: 160 }}>
+                    <span className="sh-gi-sub-text">SF per unit: <strong>{fmt(sfPerUnit)}</strong></span>
+                  </div>
+                  <div className="sh-gi-row" style={{ paddingLeft: 160 }}>
+                    <span className="sh-gi-sub-text">Total beds (from bed mix): <strong>{fmt(calcs.totalBeds)}</strong></span>
+                  </div>
+
+                  <div className="sh-gi-divider"></div>
+
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Parking</span>
+                    <div className="sh-gi-input sh-gi-tag-field">
+                      <span className="sh-gi-tag">Surface <span className="sh-gi-tag-x">&times;</span></span>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Surface parking spaces</span>
+                    <div className="sh-stepper sh-stepper-wide">
+                      <button className="sh-stepper-btn" onClick={() => setParkingSpaces(Math.max(0, parkingSpaces - 1))}>&#8722;</button>
+                      <span className="sh-stepper-value">{parkingSpaces}</span>
+                      <button className="sh-stepper-btn" onClick={() => setParkingSpaces(parkingSpaces + 1)}>+</button>
+                    </div>
+                  </div>
+
+                  <div className="sh-gi-divider"></div>
+
+                  <h5 className="sh-gi-subsection-title">Optional fields</h5>
+                  <p className="sh-gi-subsection-subtitle">These fields are informational - they do not impact calculations.</p>
+
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Buildings</span>
+                    <div className="sh-stepper">
+                      <button className="sh-stepper-btn" onClick={() => setBuildings(Math.max(1, buildings - 1))}>&#8722;</button>
+                      <span className="sh-stepper-value">{buildings}</span>
+                      <button className="sh-stepper-btn" onClick={() => setBuildings(buildings + 1)}>+</button>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row">
+                    <span className="sh-gi-label">Stories</span>
+                    <div className="sh-stepper">
+                      <button className="sh-stepper-btn" onClick={() => setStories(Math.max(1, stories - 1))}>&#8722;</button>
+                      <span className="sh-stepper-value">{stories}</span>
+                      <button className="sh-stepper-btn" onClick={() => setStories(stories + 1)}>+</button>
+                    </div>
+                  </div>
+                  <div className="sh-gi-row" style={{ paddingLeft: 160 }}>
+                    <span className="sh-gi-sub-text">SF per floor: <strong>{fmt(Math.round(builtGrossSF / (stories || 1)))}</strong></span>
+                  </div>
+                </div>
+
+                <div className="sh-gi-computed-col">
+                  <div className="sh-gi-stat-grid">
+                    <div className="sh-opinfo-infobox">
+                      <span className="sh-opinfo-infobox-label">Net rentable area</span>
+                      <span className="sh-opinfo-infobox-value">{fmt(netRentableSF)}</span>
+                    </div>
+                    <div className="sh-opinfo-infobox">
+                      <span className="sh-opinfo-infobox-label">Beds/acre</span>
+                      <span className="sh-opinfo-infobox-value" style={{ fontStyle: 'italic', color: '#6c7280' }}>In progress</span>
+                    </div>
+                    <div className="sh-opinfo-infobox">
+                      <span className="sh-opinfo-infobox-label">Total parking spots</span>
+                      <span className="sh-opinfo-infobox-value">{parkingSpaces}</span>
+                    </div>
+                    <div className="sh-opinfo-infobox">
+                      <span className="sh-opinfo-infobox-label">Parking ratio</span>
+                      <span className="sh-opinfo-infobox-value">{numUnits > 0 ? (parkingSpaces / numUnits).toFixed(2) : '0.00'} / unit</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════
+          Tab B: Development (placeholder)
+          ══════════════════════════════════════════ */}
+      {activeTab === 'development' && (
+        <div className="sh-section">
+          <div className="sh-section-num"></div>
+          <div className="sh-section-card">
+            <div className="sh-tab-placeholder">
+              <span className="sh-tab-placeholder-text">Development tab coming soon</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════
+          Tab C: Operations
+          ══════════════════════════════════════════ */}
+      {activeTab === 'operations' && (
+        <>
+
+      {/* Section 1: Operating Information */}
+      <div className="sh-section" style={{ marginBottom: 32 }}>
+        <div className="sh-section-num">1</div>
+        <div className="sh-section-card">
+          <div className="sh-section-header">
+            <div>
+              <h4 className="sh-section-title">Operating Information</h4>
+              <p className="sh-section-subtitle">Information about this investment's incoming revenue</p>
+            </div>
+            <div className="sh-header-right">
+              <div className="sh-caret" role="button" tabIndex={0}>
+                <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                  <path d="M1 7L7 1L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="sh-opinfo-layout">
+            {/* Left: form fields */}
+            <div className="sh-opinfo-fields">
+              <div className="sh-opinfo-row">
+                <span className="sh-opinfo-label">Lease-up %</span>
+                <div className="sh-stepper">
+                  <button className="sh-stepper-btn" onClick={() => setLeaseUpPct(Math.max(0, leaseUpPct - 1))}>&#8722;</button>
+                  <span className="sh-stepper-value">{leaseUpPct.toFixed(2)}%</span>
+                  <button className="sh-stepper-btn" onClick={() => setLeaseUpPct(Math.min(100, leaseUpPct + 1))}>+</button>
+                </div>
+              </div>
+
+              <div className="sh-opinfo-row">
+                <span className="sh-opinfo-label">Rent growth (annual)</span>
+                <div className="sh-stepper">
+                  <button className="sh-stepper-btn" onClick={() => setRentGrowth(Math.max(0, +(rentGrowth - 0.25).toFixed(2)))}>&#8722;</button>
+                  <span className="sh-stepper-value">{rentGrowth.toFixed(2)}%</span>
+                  <button className="sh-stepper-btn" onClick={() => setRentGrowth(+(rentGrowth + 0.25).toFixed(2))}>+</button>
+                </div>
+              </div>
+
+              <div className="sh-opinfo-row">
+                <span className="sh-opinfo-label">Academic year start</span>
+                <div className="sh-stepper">
+                  <button className="sh-stepper-btn" onClick={() => {
+                    const idx = months.indexOf(academicStart);
+                    setAcademicStart(months[(idx - 1 + 12) % 12]);
+                  }}>&#8722;</button>
+                  <span className="sh-stepper-value">{academicStart}</span>
+                  <button className="sh-stepper-btn" onClick={() => {
+                    const idx = months.indexOf(academicStart);
+                    setAcademicStart(months[(idx + 1) % 12]);
+                  }}>+</button>
+                </div>
+              </div>
+
+              <div className="sh-opinfo-row">
+                <span className="sh-opinfo-label">Lease term</span>
+                <select className="sh-opinfo-select" value={leaseTerm}
+                  onChange={(e) => setLeaseTerm(Number(e.target.value))}>
+                  <option value={9}>9 months</option>
+                  <option value={10}>10 months</option>
+                  <option value={12}>12 months</option>
+                </select>
+              </div>
+
+              {leaseTerm < 12 && (
+                <>
+                  <div className="sh-opinfo-row">
+                    <span className="sh-opinfo-label">Summer income</span>
+                    <div className="sh-opinfo-toggle-group">
+                      <button className={`sh-opinfo-toggle-btn ${summerToggle === 'none' ? 'active' : ''}`}
+                        onClick={() => setSummerToggle('none')}>None</button>
+                      <button className={`sh-opinfo-toggle-btn ${summerToggle === 'partial' ? 'active' : ''}`}
+                        onClick={() => setSummerToggle('partial')}>Partial</button>
+                    </div>
+                  </div>
+
+                  {summerToggle === 'partial' && (
+                    <>
+                      <div className="sh-opinfo-row">
+                        <span className="sh-opinfo-label">Summer occupancy %</span>
+                        <div className="sh-stepper">
+                          <button className="sh-stepper-btn" onClick={() => setSummerOccPct(Math.max(0, summerOccPct - 1))}>&#8722;</button>
+                          <span className="sh-stepper-value">{summerOccPct.toFixed(2)}%</span>
+                          <button className="sh-stepper-btn" onClick={() => setSummerOccPct(Math.min(100, summerOccPct + 1))}>+</button>
+                        </div>
+                      </div>
+                      <div className="sh-opinfo-row">
+                        <span className="sh-opinfo-label">Summer rent/bed</span>
+                        <div className="sh-stepper">
+                          <button className="sh-stepper-btn" onClick={() => setSummerRentPerBed(Math.max(0, summerRentPerBed - 25))}>&#8722;</button>
+                          <span className="sh-stepper-value">${summerRentPerBed}</span>
+                          <button className="sh-stepper-btn" onClick={() => setSummerRentPerBed(summerRentPerBed + 25)}>+</button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              <div className="sh-opinfo-row">
+                <span className="sh-opinfo-label">Initial free rent</span>
+                <div className="sh-stepper">
+                  <button className="sh-stepper-btn" onClick={() => setFreeRent(Math.max(0, freeRent - 1))}>&#8722;</button>
+                  <span className="sh-stepper-value">{freeRent} months</span>
+                  <button className="sh-stepper-btn" onClick={() => setFreeRent(freeRent + 1)}>+</button>
+                </div>
+              </div>
+
+              <div className="sh-opinfo-row">
+                <span className="sh-opinfo-label">Stabilized free rent</span>
+                <div className="sh-stepper">
+                  <button className="sh-stepper-btn" onClick={() => setStabilizedFreeRent(Math.max(0, stabilizedFreeRent - 1))}>&#8722;</button>
+                  <span className="sh-stepper-value">{stabilizedFreeRent} months</span>
+                  <button className="sh-stepper-btn" onClick={() => setStabilizedFreeRent(stabilizedFreeRent + 1)}>+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: computed info panel */}
+            <div className="sh-opinfo-computed">
+              <div className="sh-opinfo-infobox">
+                <span className="sh-opinfo-infobox-label">Operation start</span>
+                <span className="sh-opinfo-infobox-value">{academicStart.substring(0,3)} 2030 (Month 49)</span>
+              </div>
+              <div className="sh-opinfo-infobox">
+                <span className="sh-opinfo-infobox-label">1st stabilized month</span>
+                <span className="sh-opinfo-infobox-value">Jan 2031 (Month 60)</span>
+              </div>
+              <div className="sh-opinfo-monthly">
+                <table className="sh-table sh-monthly-table">
+                  <thead>
+                    <tr className="sh-cat-header">
+                      <th className="sh-th-label" style={{ fontWeight: 700, color: '#fff' }}>Monthly<br/>analysis</th>
+                      {leaseUpSchedule.map((m, i) => (
+                        <th key={i} className="sh-th-metric" style={{ fontSize: 11, textTransform: 'uppercase', lineHeight: '1.3' }}>
+                          <div style={{ color: '#6c7280' }}>Month {m.monthNum}</div>
+                          <div style={{ color: '#fff', fontWeight: 600 }}>{m.month} {m.year}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="sh-row">
+                      <td className="sh-td-label" style={{ fontWeight: 500 }}>Leased %</td>
+                      {leaseUpSchedule.map((m, i) => (
+                        <td key={i} className="sh-td-metric">{m.pct}%</td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          Section 2: Income
+          ══════════════════════════════════════════ */}
+      <div className="sh-section">
+        <div className="sh-section-num">2</div>
+        <div className="sh-section-card">
+
+          {/* Header */}
+          <div className="sh-section-header">
+            <div>
+              <h4 className="sh-section-title">Income</h4>
+              <p className="sh-section-subtitle">Student housing revenue by bed with seasonal adjustments</p>
+            </div>
+            <div className="sh-header-right">
+              <div className="sh-display-toggle">
+                <button className={`sh-toggle-btn ${displayMode === 'perBed' ? 'active' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); setDisplayMode('perBed'); }}>Per Bed</button>
+                <button className={`sh-toggle-btn ${displayMode === 'perUnit' ? 'active' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); setDisplayMode('perUnit'); }}>Per Unit</button>
+                <button className={`sh-toggle-btn ${displayMode === 'perSF' ? 'active' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); setDisplayMode('perSF'); }}>Per SF</button>
+              </div>
+              <div className={`sh-caret ${collapsed ? 'sh-caret-down' : ''}`}
+                onClick={() => setCollapsed(!collapsed)} role="button" tabIndex={0}>
+                <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                  <path d="M1 7L7 1L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {!collapsed && (
+            <div className="sh-body">
+
+              {/* ── Bed Mix Table ─────────────────── */}
+              <div className="sh-table-wrap">
+                <table className="sh-table">
+                  <thead>
+                    <tr className="sh-cat-header">
+                      <th className="sh-th-label" style={{ minWidth: 180 }}>Unit Type</th>
+                      <th className="sh-th-metric"># of Units</th>
+                      <th className="sh-th-metric">Beds / Unit</th>
+                      <th className="sh-th-metric">Total Beds</th>
+                      <th className="sh-th-metric">Rent/Bed (Mo.)</th>
+                      <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
+                      <th className="sh-th-metric">Amount/year</th>
+                      <th className="sh-th-action"><span className="sh-th-plus" onClick={addRow}>+</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((r) => {
+                      const totalBeds = r.units * r.bedsPerUnit;
+                      const rowAnnual = totalBeds * (leaseUpPct / 100) * r.rentPerBed * leaseTerm;
+                      const rowPerMetric = metricDivisor > 0
+                        ? (displayMode === 'perBed' ? rowAnnual / (totalBeds || 1)
+                          : displayMode === 'perUnit' ? rowAnnual / (r.units || 1)
+                          : rowAnnual / (totalBeds * 400 || 1))
+                        : 0;
+                      return (
+                        <tr key={r.id} className="sh-row">
+                          <td className="sh-td-label">
+                            <input className="sh-cell-input sh-cell-input-left" value={r.unitType}
+                              onChange={(e) => updateRow(r.id, 'unitType', e.target.value)}
+                              style={{ color: '#0fb3ff', minWidth: 160 }} />
+                          </td>
+                          <td className="sh-td-metric">
+                            <input type="number" className="sh-cell-input" value={r.units}
+                              onChange={(e) => updateRow(r.id, 'units', Number(e.target.value))} min={0} />
+                          </td>
+                          <td className="sh-td-metric">
+                            <input type="number" className="sh-cell-input" value={r.bedsPerUnit}
+                              onChange={(e) => updateRow(r.id, 'bedsPerUnit', Number(e.target.value))} min={1} />
+                          </td>
+                          <td className="sh-td-metric" style={{ color: '#ffffff' }}>{fmt(totalBeds)}</td>
+                          <td className="sh-td-metric">
+                            <input type="number" className="sh-cell-input" value={r.rentPerBed}
+                              onChange={(e) => updateRow(r.id, 'rentPerBed', Number(e.target.value))} min={0} />
+                          </td>
+                          <td className="sh-td-metric" style={{ color: '#ffffff' }}>{fmtD(rowPerMetric)}</td>
+                          <td className="sh-td-metric" style={{ color: '#ffffff' }}>{fmtD(rowAnnual)}</td>
+                          <td className="sh-td-action">
+                            <span className="sh-trash" onClick={() => removeRow(r.id)}>&#xf1f8;</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="sh-row sh-row-total">
+                      <td className="sh-td-label sh-td-bold">Total bed mix income</td>
+                      <td className="sh-td-metric sh-td-bold">{fmt(calcs.totalUnits)}</td>
+                      <td className="sh-td-metric sh-td-bold"></td>
+                      <td className="sh-td-metric sh-td-bold">{fmt(calcs.totalBeds)}</td>
+                      <td className="sh-td-metric sh-td-bold"></td>
+                      <td className="sh-td-metric sh-td-bold">{perMetric(calcs.academicRevenue)}</td>
+                      <td className="sh-td-metric sh-td-bold">{fmtD(calcs.academicRevenue)}</td>
+                      <td className="sh-td-action"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summer revenue line (if applicable) */}
+              {leaseTerm < 12 && summerToggle === 'partial' && calcs.summerRevenue > 0 && (
+                <div className="sh-table-wrap">
+                  <table className="sh-table">
+                    <tbody>
+                      <tr className="sh-row">
+                        <td className="sh-td-label-wide">
+                          Summer revenue ({calcs.gapMonths} mo. @ {summerOccPct}% occ.)
+                        </td>
+                        <td className="sh-td-metric"></td>
+                        <td className="sh-td-metric"></td>
+                        <td className="sh-td-metric">{perMetric(calcs.summerRevenue)}</td>
+                        <td className="sh-td-metric">{fmtD(calcs.summerRevenue)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* ── Gross Potential Rent ──────────── */}
+              <div className="sh-table-wrap">
+                <table className="sh-table">
+                  <tbody>
+                    <tr className="sh-row sh-row-grand-total">
+                      <td className="sh-td-label-wide sh-td-bold">Gross potential rent</td>
+                      <td className="sh-td-metric"></td>
+                      <td className="sh-td-metric"></td>
+                      <td className="sh-td-metric sh-td-bold">{perMetric(calcs.grossPotentialRent)}</td>
+                      <td className="sh-td-metric sh-td-bold">{fmtD(calcs.grossPotentialRent)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Gross Income Adjustments ─────── */}
+              <div className="sh-table-wrap" style={{ marginTop: 16 }}>
+                <table className="sh-table">
+                  <thead>
+                    <tr className="sh-cat-header">
+                      <th className="sh-th-label-wide">Gross income adjustments</th>
+                      <th className="sh-th-metric">% of GPR</th>
+                      <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
+                      <th className="sh-th-metric">Amount/year</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="sh-row">
+                      <td className="sh-td-label-wide">
+                        <div>Unleased beds</div>
+                        <div style={{ color: '#6c7280', fontSize: 11, marginTop: 2 }}>
+                          From lease-up % ({leaseUpPct}%)
+                        </div>
+                      </td>
+                      <td className="sh-td-metric sh-val-muted">{(100 - leaseUpPct).toFixed(1)}%</td>
+                      <td className="sh-td-metric sh-val-negative">{calcs.unleasedBeds > 0 ? fmtNeg(calcs.unleasedBeds / (metricDivisor || 1)) : '$0'}</td>
+                      <td className="sh-td-metric sh-val-negative">{calcs.unleasedBeds > 0 ? fmtNeg(calcs.unleasedBeds) : '$0'}</td>
+                    </tr>
+                    <tr className="sh-row">
+                      <td className="sh-td-label-wide sh-val-blue sh-link">Concessions</td>
+                      <td className="sh-td-metric">
+                        <input type="number" className="sh-cell-input" value={concessionsPct}
+                          onChange={(e) => setConcessionsPct(Number(e.target.value))} min={0} max={100}
+                          style={{ width: 60 }} />
+                      </td>
+                      <td className="sh-td-metric sh-val-negative">{calcs.concessions > 0 ? fmtNeg(calcs.concessions / (metricDivisor || 1)) : '$0'}</td>
+                      <td className="sh-td-metric sh-val-negative">{calcs.concessions > 0 ? fmtNeg(calcs.concessions) : '$0'}</td>
+                    </tr>
+                    <tr className="sh-row sh-row-total">
+                      <td className="sh-td-label-wide sh-td-bold">Total adjustments</td>
+                      <td className="sh-td-metric sh-td-bold"></td>
+                      <td className="sh-td-metric sh-td-bold sh-val-negative">
+                        {fmtNeg((calcs.unleasedBeds + calcs.concessions) / (metricDivisor || 1))}
+                      </td>
+                      <td className="sh-td-metric sh-td-bold sh-val-negative">
+                        {fmtNeg(calcs.unleasedBeds + calcs.concessions)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Other Income ──────────────────── */}
+              <div className="sh-table-wrap" style={{ marginTop: 16 }}>
+                <table className="sh-table">
+                  <thead>
+                    <tr className="sh-cat-header">
+                      <th className="sh-th-label-wide">
+                        Other income
+                        <span className="sh-th-plus">+</span>
+                      </th>
+                      <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
+                      <th className="sh-th-metric">Amount/year</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="sh-row">
+                      <td className="sh-td-label-wide sh-val-blue sh-link">Parking</td>
+                      <td className="sh-td-metric">{perMetric(parking)}</td>
+                      <td className="sh-td-metric">
+                        <input type="number" className="sh-cell-input" value={parking}
+                          onChange={(e) => setParking(Number(e.target.value))} min={0} />
+                      </td>
+                    </tr>
+                    <tr className="sh-row">
+                      <td className="sh-td-label-wide sh-val-blue sh-link">RUBS / Utility reimbursements</td>
+                      <td className="sh-td-metric">{perMetric(rubs)}</td>
+                      <td className="sh-td-metric">
+                        <input type="number" className="sh-cell-input" value={rubs}
+                          onChange={(e) => setRubs(Number(e.target.value))} min={0} />
+                      </td>
+                    </tr>
+                    <tr className="sh-row">
+                      <td className="sh-td-label-wide sh-val-blue sh-link">Furniture premium</td>
+                      <td className="sh-td-metric">{perMetric(calcs.furnitureAnnual)}</td>
+                      <td className="sh-td-metric">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                          <input type="number" className="sh-cell-input" value={furniturePremium}
+                            onChange={(e) => setFurniturePremium(Number(e.target.value))} min={0}
+                            style={{ width: 60 }} />
+                          <span style={{ color: '#6c7280', fontSize: 11 }}>/bed/mo = {fmtD(calcs.furnitureAnnual)}/yr</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="sh-row">
+                      <td className="sh-td-label-wide sh-val-blue sh-link">Other</td>
+                      <td className="sh-td-metric">{perMetric(otherIncome)}</td>
+                      <td className="sh-td-metric">
+                        <input type="number" className="sh-cell-input" value={otherIncome}
+                          onChange={(e) => setOtherIncome(Number(e.target.value))} min={0} />
+                      </td>
+                    </tr>
+                    <tr className="sh-row sh-row-total">
+                      <td className="sh-td-label-wide sh-td-bold">Total other income</td>
+                      <td className="sh-td-metric sh-td-bold">{perMetric(calcs.totalOther)}</td>
+                      <td className="sh-td-metric sh-td-bold">{fmtD(calcs.totalOther)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Total Potential Income ────────── */}
+              <div className="sh-table-wrap" style={{ marginTop: 16 }}>
+                <table className="sh-table">
+                  <tbody>
+                    <tr className="sh-row sh-row-grand-total">
+                      <td className="sh-td-label-wide sh-td-bold">Effective gross income</td>
+                      <td className="sh-td-metric"></td>
+                      <td className="sh-td-metric sh-td-bold">{perMetric(calcs.totalPotentialIncome)}</td>
+                      <td className="sh-td-metric sh-td-bold">{fmtD(calcs.totalPotentialIncome)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          Section 3: Expenses
+          ══════════════════════════════════════════ */}
+      <div className="sh-section" style={{ marginTop: 32 }}>
+        <div className="sh-section-num">3</div>
+        <div className="sh-section-card">
+          <div className="sh-section-header">
+            <div>
+              <h4 className="sh-section-title">Expenses</h4>
+              <p className="sh-section-subtitle">Operating expenses and capital expenditures per bed</p>
+            </div>
+            <div className="sh-header-right">
+              <div className="sh-display-toggle">
+                <button className={`sh-toggle-btn ${expDisplayMode === 'perBed' ? 'active' : ''}`}
+                  onClick={() => setExpDisplayMode('perBed')}>Per Bed</button>
+                <button className={`sh-toggle-btn ${expDisplayMode === 'perSF' ? 'active' : ''}`}
+                  onClick={() => setExpDisplayMode('perSF')}>Per SF</button>
+                <button className={`sh-toggle-btn ${expDisplayMode === 'pctEGI' ? 'active' : ''}`}
+                  onClick={() => setExpDisplayMode('pctEGI')}>% of EGI</button>
+              </div>
+              <div className="sh-caret" role="button" tabIndex={0}>
+                <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                  <path d="M1 7L7 1L13 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="sh-body">
+            {/* ── Operating Expenses ────────────── */}
+            <div className="sh-table-wrap">
+              <table className="sh-table">
+                <thead>
+                  <tr className="sh-cat-header">
+                    <th className="sh-th-label-wide">
+                      Operating expenses
+                      <span className="sh-th-plus">+</span>
+                    </th>
+                    <th className="sh-th-metric">Annual growth</th>
+                    <th className="sh-th-metric">{expSecondaryLabel}</th>
+                    <th className="sh-th-metric">Amount/year</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map((exp, i) => {
+                    const show = exp.conditional ? furniturePremium > 0 : true;
+                    if (!show) return null;
+                    return (
+                      <tr key={i} className="sh-row">
+                        <td className="sh-td-label-wide sh-val-blue sh-link">
+                          {exp.name}
+                          {exp.millRate && (
+                            <span className="sh-expense-tag">Mill rate: {exp.millRate}</span>
+                          )}
+                        </td>
+                        <td className="sh-td-metric sh-val-blue">{exp.growth}</td>
+                        <td className="sh-td-metric sh-val-muted">{expSecondaryVal(exp.amount)}</td>
+                        <td className="sh-td-metric sh-val-blue">{fmtD(exp.amount)}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="sh-row sh-row-total">
+                    <td className="sh-td-label-wide sh-td-bold">Total operating expenses</td>
+                    <td className="sh-td-metric sh-td-bold"></td>
+                    <td className="sh-td-metric sh-td-bold">{expSecondaryVal(totalOpEx)}</td>
+                    <td className="sh-td-metric sh-td-bold">{fmtD(totalOpEx)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── NOI ──────────────────────────── */}
+            <div className="sh-table-wrap" style={{ marginTop: 16 }}>
+              <table className="sh-table">
+                <tbody>
+                  <tr className="sh-row sh-row-grand-total">
+                    <td className="sh-td-label-wide sh-td-bold">Net operating income</td>
+                    <td className="sh-td-metric"></td>
+                    <td className="sh-td-metric sh-td-bold">{expSecondaryVal(noi)}</td>
+                    <td className="sh-td-metric sh-td-bold">{fmtD(noi)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Capital Expenditures ──────────── */}
+            <div className="sh-table-wrap" style={{ marginTop: 16 }}>
+              <table className="sh-table">
+                <thead>
+                  <tr className="sh-cat-header">
+                    <th className="sh-th-label-wide">
+                      Capital expenditures
+                      <span className="sh-th-plus">+</span>
+                    </th>
+                    <th className="sh-th-metric">Annual growth</th>
+                    <th className="sh-th-metric">{expSecondaryLabel}</th>
+                    <th className="sh-th-metric">Amount/year</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {capex.map((exp, i) => (
+                    <tr key={i} className="sh-row">
+                      <td className="sh-td-label-wide sh-val-blue sh-link">{exp.name}</td>
+                      <td className="sh-td-metric sh-val-blue">{exp.growth}</td>
+                      <td className="sh-td-metric sh-val-muted">{expSecondaryVal(exp.amount)}</td>
+                      <td className="sh-td-metric sh-val-blue">{fmtD(exp.amount)}</td>
+                    </tr>
+                  ))}
+                  <tr className="sh-row sh-row-total">
+                    <td className="sh-td-label-wide sh-td-bold">Total capital expenditures</td>
+                    <td className="sh-td-metric sh-td-bold"></td>
+                    <td className="sh-td-metric sh-td-bold">{expSecondaryVal(totalCapEx)}</td>
+                    <td className="sh-td-metric sh-td-bold">{fmtD(totalCapEx)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════
+          Tab D: Disposition (placeholder)
+          ══════════════════════════════════════════ */}
+      {activeTab === 'disposition' && (
+        <div className="sh-section">
+          <div className="sh-section-num"></div>
+          <div className="sh-section-card">
+            <div className="sh-tab-placeholder">
+              <span className="sh-tab-placeholder-text">Disposition tab coming soon</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

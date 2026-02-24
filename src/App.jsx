@@ -4,6 +4,7 @@ import PermanentDebt from './demos/back-of-envelope/PermanentDebt'
 import PermanentDebtSection from './demos/permanent-debt/PermanentDebtSection'
 import IncomeSection from './demos/income-section/IncomeSection'
 import StudentHousingIncome from './demos/student-housing-income/StudentHousingIncome'
+import DealUpsellPopup from './demos/deal-upsell-popup/DealUpsellPopup'
 import OneTimeCost from './demos/one-time-cost/OneTimeCost'
 
 function Home() {
@@ -62,6 +63,14 @@ function Home() {
             Budget line curve selector with new One-Time option — click any Curve badge to open the modal
           </p>
         </li>
+        <li>
+          <Link to="/demos/deal-upsell-popup" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            Deal Upsell: Core Platform Pop-up
+          </Link>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
+            Targeted pop-up overlay on the core Northspyre dashboard encouraging existing users to try Deal
+          </p>
+        </li>
       </ul>
 
       <h2>Getting Started</h2>
@@ -103,6 +112,7 @@ function App() {
             <Route path="/demos/income-section" element={<IncomeSection />} />
             <Route path="/demos/student-housing-income" element={<StudentHousingIncome />} />
             <Route path="/demos/one-time-cost" element={<OneTimeCost />} />
+            <Route path="/demos/deal-upsell-popup" element={<DealUpsellPopup />} />
           </Routes>
         </main>
 

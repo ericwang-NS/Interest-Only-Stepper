@@ -46,6 +46,7 @@ export default function StudentHousingIncome() {
   const [county, setCounty] = useState('Travis County');
   const [giState, setGiState] = useState('Texas');
   const [zip, setZip] = useState('78705');
+  const [university, setUniversity] = useState('University of Texas at Austin');
 
   // Key Dates
   const [startMonth] = useState('August 2027');
@@ -64,12 +65,13 @@ export default function StudentHousingIncome() {
   const sfPerUnit = numUnits > 0 ? Math.round(netRentableSF / numUnits) : 0;
 
   // Operating info
-  const [leaseUpPct, setLeaseUpPct] = useState(95);
-  const [leaseTerm, setLeaseTerm] = useState(12);
+  const leaseUpPct = 100;
+  const [operationStartYear, setOperationStartYear] = useState(2027);
+  const [leaseTerm, setLeaseTerm] = useState(10);
   const [academicStart, setAcademicStart] = useState('August');
-  const [summerToggle, setSummerToggle] = useState('none');
-  const [summerOccPct, setSummerOccPct] = useState(60);
-  const [summerRentPerBed, setSummerRentPerBed] = useState(500);
+  const [summerToggle, setSummerToggle] = useState('partial');
+  const [summerOccPct, setSummerOccPct] = useState(85);
+  const [summerRentRate, setSummerRentRate] = useState(85);
 
   // Bed mix
   const [rows, setRows] = useState([
@@ -81,6 +83,19 @@ export default function StudentHousingIncome() {
   const [rentGrowth, setRentGrowth] = useState(3.0);
   const [freeRent, setFreeRent] = useState(0);
   const [stabilizedFreeRent, setStabilizedFreeRent] = useState(0);
+
+  // Income adjustments
+  const [incomeAdjustments, setIncomeAdjustments] = useState([
+    { id: 1, name: 'Vacancy', pct: 6, from: 'totalPotentialIncome' },
+    { id: 2, name: 'Credit loss', pct: 1, from: 'totalPotentialIncome' },
+  ]);
+  const addIncomeAdj = () => {
+    const nextId = incomeAdjustments.length > 0 ? Math.max(...incomeAdjustments.map(a => a.id)) + 1 : 1;
+    setIncomeAdjustments([...incomeAdjustments, { id: nextId, name: '', pct: 0, from: 'totalPotentialIncome' }]);
+  };
+  const removeIncomeAdj = (id) => setIncomeAdjustments(incomeAdjustments.filter(a => a.id !== id));
+  const updateIncomeAdj = (id, field, value) =>
+    setIncomeAdjustments(incomeAdjustments.map(a => a.id === id ? { ...a, [field]: value } : a));
 
   // Other income
   const [concessionsPct, setConcessionsPct] = useState(2);
@@ -98,23 +113,23 @@ export default function StudentHousingIncome() {
       : 0;
     const academicRevenue = totalBeds * (leaseUpPct / 100) * weightedRent * leaseTerm;
     const gapMonths = 12 - leaseTerm;
+    const summerRentPerBed = weightedRent * (summerRentRate / 100);
     const summerRevenue = (leaseTerm < 12 && summerToggle === 'partial')
       ? totalBeds * (summerOccPct / 100) * summerRentPerBed * gapMonths : 0;
     const grossPotentialRent = academicRevenue + summerRevenue;
-    const unleasedBeds = grossPotentialRent * ((100 - leaseUpPct) / 100);
     const concessions = grossPotentialRent * (concessionsPct / 100);
     const furnitureAnnual = totalBeds * furniturePremium * 12;
     const totalOther = parking + rubs + furnitureAnnual + otherIncome;
-    const totalPotentialIncome = grossPotentialRent - unleasedBeds - concessions + totalOther;
+    const totalPotentialIncome = grossPotentialRent - concessions + totalOther;
     const totalSF = totalBeds * 400;
     return {
       totalUnits, totalBeds, weightedRent,
       academicRevenue, summerRevenue, grossPotentialRent,
-      unleasedBeds, concessions,
+      concessions,
       furnitureAnnual, totalOther,
       totalPotentialIncome, totalSF, gapMonths,
     };
-  }, [rows, leaseUpPct, leaseTerm, summerToggle, summerOccPct, summerRentPerBed,
+  }, [rows, leaseTerm, summerToggle, summerOccPct, summerRentRate,
       concessionsPct, parking, rubs, furniturePremium, otherIncome]);
 
   // Expenses
@@ -146,7 +161,17 @@ export default function StudentHousingIncome() {
     [expenses, furniturePremium]);
 
   const totalCapEx = useMemo(() => capex.reduce((s, e) => s + e.amount, 0), [capex]);
-  const noi = calcs.totalPotentialIncome - totalOpEx;
+
+  const totalIncomeAdjustments = useMemo(() =>
+    incomeAdjustments.reduce((sum, adj) => {
+      const base = adj.from === 'grossPotentialRent'
+        ? calcs.grossPotentialRent : calcs.totalPotentialIncome;
+      return sum + base * (adj.pct / 100);
+    }, 0),
+    [incomeAdjustments, calcs.grossPotentialRent, calcs.totalPotentialIncome]);
+
+  const effectiveGrossIncome = calcs.totalPotentialIncome - totalIncomeAdjustments;
+  const noi = effectiveGrossIncome - totalOpEx;
 
   const expSecondaryLabel = expDisplayMode === 'perBed' ? '$/Bed/year'
     : expDisplayMode === 'perSF' ? '$/SF/year' : '% of EGI';
@@ -333,6 +358,10 @@ export default function StudentHousingIncome() {
                       <div className="sh-gi-row">
                         <span className="sh-gi-label">Zip</span>
                         <input className="sh-gi-input" value={zip} onChange={(e) => setZip(e.target.value)} />
+                      </div>
+                      <div className="sh-gi-row">
+                        <span className="sh-gi-label">Associated university</span>
+                        <input className="sh-gi-input" value={university} onChange={(e) => setUniversity(e.target.value)} placeholder="e.g. University of Texas at Austin" />
                       </div>
                     </div>
                     <div className="sh-gi-map">
@@ -555,14 +584,6 @@ export default function StudentHousingIncome() {
                   <div className="sh-opinfo-layout">
                     <div className="sh-opinfo-fields">
                       <div className="sh-opinfo-row">
-                        <span className="sh-opinfo-label">Lease-up %</span>
-                        <div className="sh-stepper">
-                          <button className="sh-stepper-btn" onClick={() => setLeaseUpPct(Math.max(0, leaseUpPct - 1))}>&#8722;</button>
-                          <span className="sh-stepper-value">{leaseUpPct.toFixed(2)}%</span>
-                          <button className="sh-stepper-btn" onClick={() => setLeaseUpPct(Math.min(100, leaseUpPct + 1))}>+</button>
-                        </div>
-                      </div>
-                      <div className="sh-opinfo-row">
                         <span className="sh-opinfo-label">Rent growth (annual)</span>
                         <div className="sh-stepper">
                           <button className="sh-stepper-btn" onClick={() => setRentGrowth(Math.max(0, +(rentGrowth - 0.25).toFixed(2)))}>&#8722;</button>
@@ -572,17 +593,18 @@ export default function StudentHousingIncome() {
                       </div>
                       <div className="sh-opinfo-row">
                         <span className="sh-opinfo-label">Academic year start</span>
-                        <div className="sh-stepper">
-                          <button className="sh-stepper-btn" onClick={() => {
-                            const idx = monthNames.indexOf(academicStart);
-                            setAcademicStart(monthNames[(idx - 1 + 12) % 12]);
-                          }}>&#8722;</button>
-                          <span className="sh-stepper-value">{academicStart}</span>
-                          <button className="sh-stepper-btn" onClick={() => {
-                            const idx = monthNames.indexOf(academicStart);
-                            setAcademicStart(monthNames[(idx + 1) % 12]);
-                          }}>+</button>
-                        </div>
+                        <select className="sh-opinfo-select" value={academicStart} onChange={(e) => setAcademicStart(e.target.value)}>
+                          <option value="August">August</option>
+                          <option value="September">September</option>
+                        </select>
+                      </div>
+                      <div className="sh-opinfo-row">
+                        <span className="sh-opinfo-label">Operation start</span>
+                        <select className="sh-opinfo-select" value={operationStartYear} onChange={(e) => setOperationStartYear(Number(e.target.value))}>
+                          {[2027, 2028, 2029, 2030, 2031].map((yr) => (
+                            <option key={yr} value={yr}>{academicStart} {yr}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="sh-opinfo-row">
                         <span className="sh-opinfo-label">Lease term</span>
@@ -597,8 +619,8 @@ export default function StudentHousingIncome() {
                           <div className="sh-opinfo-row">
                             <span className="sh-opinfo-label">Summer income</span>
                             <div className="sh-opinfo-toggle-group">
-                              <button className={`sh-opinfo-toggle-btn ${summerToggle === 'none' ? 'active' : ''}`} onClick={() => setSummerToggle('none')}>None</button>
                               <button className={`sh-opinfo-toggle-btn ${summerToggle === 'partial' ? 'active' : ''}`} onClick={() => setSummerToggle('partial')}>Partial</button>
+                              <button className={`sh-opinfo-toggle-btn ${summerToggle === 'none' ? 'active' : ''}`} onClick={() => setSummerToggle('none')}>None</button>
                             </div>
                           </div>
                           {summerToggle === 'partial' && (
@@ -612,12 +634,18 @@ export default function StudentHousingIncome() {
                                 </div>
                               </div>
                               <div className="sh-opinfo-row">
-                                <span className="sh-opinfo-label">Summer rent/bed</span>
+                                <span className="sh-opinfo-label">Summer rent rate</span>
                                 <div className="sh-stepper">
-                                  <button className="sh-stepper-btn" onClick={() => setSummerRentPerBed(Math.max(0, summerRentPerBed - 25))}>&#8722;</button>
-                                  <span className="sh-stepper-value">${summerRentPerBed}</span>
-                                  <button className="sh-stepper-btn" onClick={() => setSummerRentPerBed(summerRentPerBed + 25)}>+</button>
+                                  <button className="sh-stepper-btn" onClick={() => setSummerRentRate(Math.max(0, summerRentRate - 1))}>&#8722;</button>
+                                  <span className="sh-stepper-value">{summerRentRate}% of std.</span>
+                                  <button className="sh-stepper-btn" onClick={() => setSummerRentRate(Math.min(150, summerRentRate + 1))}>+</button>
                                 </div>
+                              </div>
+                              <div className="sh-opinfo-row">
+                                <span className="sh-opinfo-label"></span>
+                                <span style={{ color: '#6c7280', fontSize: 12 }}>
+                                  Effective summer rent: <strong style={{ color: '#ffffff' }}>{fmtD(calcs.weightedRent * (summerRentRate / 100))}/bed</strong>
+                                </span>
                               </div>
                             </>
                           )}
@@ -641,10 +669,6 @@ export default function StudentHousingIncome() {
                       </div>
                     </div>
                     <div className="sh-opinfo-computed">
-                      <div className="sh-opinfo-infobox">
-                        <span className="sh-opinfo-infobox-label">Operation start</span>
-                        <span className="sh-opinfo-infobox-value">{academicStart.substring(0,3)} 2027 (Month 1)</span>
-                      </div>
                       <div className="sh-opinfo-infobox">
                         <span className="sh-opinfo-infobox-label">1st stabilized month</span>
                         <span className="sh-opinfo-infobox-value">Aug 2028 (Month 13)</span>
@@ -812,16 +836,6 @@ export default function StudentHousingIncome() {
                           </thead>
                           <tbody>
                             <tr className="sh-row">
-                              <td className="sh-td-label-wide">
-                                <div>Unleased beds</div>
-                                <div style={{ color: '#6c7280', fontSize: 11, marginTop: 2 }}>From lease-up % ({leaseUpPct}%)</div>
-                              </td>
-                              <td className="sh-td-metric sh-val-muted">{(100 - leaseUpPct).toFixed(1)}%</td>
-                              <td className="sh-td-metric sh-val-negative">{calcs.unleasedBeds > 0 ? fmtNeg(calcs.unleasedBeds / (metricDivisor || 1)) : '$0'}</td>
-                              <td className="sh-td-metric sh-val-negative">{calcs.unleasedBeds > 0 ? fmtNeg(calcs.unleasedBeds) : '$0'}</td>
-                              <MonthCells />
-                            </tr>
-                            <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Concessions</td>
                               <td className="sh-td-metric">
                                 <input type="number" className="sh-cell-input" value={concessionsPct} onChange={(e) => setConcessionsPct(Number(e.target.value))} min={0} max={100} style={{ width: 60 }} />
@@ -833,8 +847,8 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row sh-row-total">
                               <td className="sh-td-label-wide sh-td-bold">Total adjustments</td>
                               <td className="sh-td-metric sh-td-bold"></td>
-                              <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg((calcs.unleasedBeds + calcs.concessions) / (metricDivisor || 1))}</td>
-                              <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(calcs.unleasedBeds + calcs.concessions)}</td>
+                              <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(calcs.concessions / (metricDivisor || 1))}</td>
+                              <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(calcs.concessions)}</td>
                               <MonthCells />
                             </tr>
                           </tbody>
@@ -892,15 +906,101 @@ export default function StudentHousingIncome() {
                         </table>
                       </div>
 
+                      {/* Total Potential Income */}
+                      <div className="sh-table-wrap">
+                        <table className="sh-table">
+                          <tbody>
+                            <tr className="sh-row sh-row-grand-total">
+                              <td className="sh-td-label-wide sh-td-bold">Total potential income</td>
+                              <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric sh-td-bold">{perMetric(calcs.totalPotentialIncome)}</td>
+                              <td className="sh-td-metric sh-td-bold">{fmtD(calcs.totalPotentialIncome)}</td>
+                              <MonthCells />
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Income Adjustments */}
+                      <div className="sh-table-wrap" style={{ marginTop: 16 }}>
+                        <table className="sh-table">
+                          <thead>
+                            <tr className="sh-cat-header">
+                              <th className="sh-th-label-wide">
+                                Income adjustments <span className="sh-th-plus" onClick={addIncomeAdj}>+</span>
+                              </th>
+                              <th className="sh-th-metric">% of income</th>
+                              <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
+                              <th className="sh-th-metric">Amount/year</th>
+                              <MonthHeaders />
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {incomeAdjustments.map((adj) => {
+                              const base = adj.from === 'grossPotentialRent'
+                                ? calcs.grossPotentialRent : calcs.totalPotentialIncome;
+                              const amount = base * (adj.pct / 100);
+                              return (
+                                <tr key={adj.id} className="sh-row">
+                                  <td className="sh-td-label-wide">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <input
+                                        className="sh-cell-input sh-cell-input-left"
+                                        value={adj.name}
+                                        onChange={(e) => updateIncomeAdj(adj.id, 'name', e.target.value)}
+                                        style={{ color: '#ffffff', minWidth: 120 }}
+                                      />
+                                      <span className="sh-trash" onClick={() => removeIncomeAdj(adj.id)} style={{ fontSize: 11 }}>✕</span>
+                                    </div>
+                                    <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                      <span style={{ color: '#6c7280', fontSize: 11 }}>From:</span>
+                                      <select
+                                        value={adj.from}
+                                        onChange={(e) => updateIncomeAdj(adj.id, 'from', e.target.value)}
+                                        style={{ background: 'transparent', border: 'none', color: '#0fb3ff', fontSize: 11, cursor: 'pointer' }}
+                                      >
+                                        <option value="totalPotentialIncome">Total potential income</option>
+                                        <option value="grossPotentialRent">Gross potential rent</option>
+                                      </select>
+                                    </div>
+                                  </td>
+                                  <td className="sh-td-metric">
+                                    <input
+                                      type="number"
+                                      className="sh-cell-input"
+                                      value={adj.pct}
+                                      onChange={(e) => updateIncomeAdj(adj.id, 'pct', Number(e.target.value))}
+                                      min={0} max={100}
+                                      style={{ width: 60 }}
+                                    />
+                                    <span style={{ color: '#6c7280', fontSize: 11, marginLeft: 2 }}>%</span>
+                                  </td>
+                                  <td className="sh-td-metric sh-val-negative">{amount > 0 ? fmtNeg(amount / (metricDivisor || 1)) : '$0'}</td>
+                                  <td className="sh-td-metric sh-val-negative">{amount > 0 ? fmtNeg(amount) : '$0'}</td>
+                                  <MonthCells />
+                                </tr>
+                              );
+                            })}
+                            <tr className="sh-row sh-row-total">
+                              <td className="sh-td-label-wide sh-td-bold">Total adjustments</td>
+                              <td className="sh-td-metric sh-td-bold"></td>
+                              <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(totalIncomeAdjustments / (metricDivisor || 1))}</td>
+                              <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(totalIncomeAdjustments)}</td>
+                              <MonthCells />
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
                       {/* Effective Gross Income */}
                       <div className="sh-table-wrap" style={{ marginTop: 16 }}>
                         <table className="sh-table">
                           <tbody>
                             <tr className="sh-row sh-row-grand-total">
-                              <td className="sh-td-label-wide sh-td-bold">Effective gross income</td>
+                              <td className="sh-td-label-wide sh-td-bold">Effective gross revenue</td>
                               <td className="sh-td-metric"></td>
-                              <td className="sh-td-metric sh-td-bold">{perMetric(calcs.totalPotentialIncome)}</td>
-                              <td className="sh-td-metric sh-td-bold">{fmtD(calcs.totalPotentialIncome)}</td>
+                              <td className="sh-td-metric sh-td-bold">{perMetric(effectiveGrossIncome)}</td>
+                              <td className="sh-td-metric sh-td-bold">{fmtD(effectiveGrossIncome)}</td>
                               <MonthCells />
                             </tr>
                           </tbody>

@@ -596,10 +596,6 @@ export default function StudentHousingIncome() {
                         </select>
                       </div>
                       <div className="sh-opinfo-row">
-                        <span className="sh-opinfo-label">Lease term</span>
-                        <span className="sh-opinfo-static-value">12 months</span>
-                      </div>
-                      <div className="sh-opinfo-row">
                         <span className="sh-opinfo-label">Initial free rent</span>
                         <div className="sh-stepper">
                           <button className="sh-stepper-btn" onClick={() => setFreeRent(Math.max(0, freeRent - 1))}>&#8722;</button>
@@ -617,9 +613,15 @@ export default function StudentHousingIncome() {
                       </div>
                     </div>
                     <div className="sh-opinfo-computed">
-                      <div className="sh-opinfo-infobox">
-                        <span className="sh-opinfo-infobox-label">1st stabilized month</span>
-                        <span className="sh-opinfo-infobox-value">{academicStart.substring(0,3)} {operationStartYear + 1} (Month 13)</span>
+                      <div className="sh-opinfo-infobox-row">
+                        <div className="sh-opinfo-infobox">
+                          <span className="sh-opinfo-infobox-label">1st stabilized month</span>
+                          <span className="sh-opinfo-infobox-value">{academicStart.substring(0,3)} {operationStartYear + 1} (Month 13)</span>
+                        </div>
+                        <div className="sh-opinfo-infobox">
+                          <span className="sh-opinfo-infobox-label">Lease term</span>
+                          <span className="sh-opinfo-infobox-value">12 months</span>
+                        </div>
                       </div>
                       <div className="sh-opinfo-monthly">
                         <table className="sh-table sh-monthly-table">

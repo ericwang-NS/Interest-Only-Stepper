@@ -505,6 +505,15 @@
   gap: 12px;
 }
 
+.sh-opinfo-infobox-row {
+  display: flex;
+  gap: 12px;
+}
+
+.sh-opinfo-infobox-row .sh-opinfo-infobox {
+  flex: 1;
+}
+
 .sh-opinfo-infobox {
   background-color: #1f2430;
   border-radius: 6px;

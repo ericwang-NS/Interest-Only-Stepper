@@ -181,6 +181,175 @@
   margin: 12px 0;
 }
 
+/* ── Gross Buildable Area ──────────────────────────── */
+
+.sh-gba-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #353b47;
+  padding-bottom: 20px;
+}
+
+.sh-gba-section {
+  flex: 1;
+}
+
+.sh-gba-cards {
+  flex: 1;
+}
+
+.sh-gba-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  margin: 0 0 12px 0;
+}
+
+.sh-gba-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sh-gba-th {
+  text-align: left;
+  font-size: 12px;
+  color: #6c7280;
+  font-weight: 400;
+  padding: 6px 8px;
+}
+
+.sh-gba-td {
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #ffffff;
+  vertical-align: middle;
+}
+
+.sh-gba-input {
+  background-color: #252a33;
+  border: 1px solid #353b47;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13px;
+  padding: 8px 10px;
+  width: 100%;
+  font-family: "Roboto", sans-serif;
+}
+
+.sh-gba-input:focus {
+  outline: none;
+  border-color: #0fb3ff;
+}
+
+.sh-gba-input-narrow {
+  width: 70px;
+}
+
+.sh-gba-unit-select {
+  background-color: #252a33;
+  border: 1px solid #353b47;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 12px;
+  padding: 8px 8px;
+  font-family: "Roboto", sans-serif;
+  cursor: pointer;
+}
+
+.sh-gba-unit-select:focus {
+  outline: none;
+  border-color: #0fb3ff;
+}
+
+.sh-gba-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background-color: #353b47;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s;
+  padding: 0;
+}
+
+.sh-gba-toggle-on {
+  background-color: #0fb3ff;
+}
+
+.sh-gba-toggle-thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+}
+
+.sh-gba-toggle-on .sh-gba-toggle-thumb {
+  left: 18px;
+}
+
+.sh-gba-disabled {
+  color: #6c7280;
+}
+
+.sh-gba-computed {
+  background-color: #252a33;
+  border: 1px solid #353b47;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sh-gba-computed-unit {
+  color: #6c7280;
+  font-size: 12px;
+}
+
+.sh-gba-add-btn {
+  background: none;
+  border: none;
+  color: #0fb3ff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 8px;
+  cursor: pointer;
+  font-family: "Roboto", sans-serif;
+}
+
+.sh-gba-add-btn:hover {
+  text-decoration: underline;
+}
+
+/* ── Percentage input wrapper ──────────────────────── */
+
+.sh-input-pct {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.sh-input-pct input {
+  width: 50px;
+  text-align: right;
+}
+
+.sh-input-pct span {
+  color: #6c7280;
+  font-size: 12px;
+}
+
 .sh-gi-subsection-title {
   color: #ffffff;
   font-size: 15px;

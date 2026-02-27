@@ -52,6 +52,17 @@ export default function StudentHousingIncome() {
   const [constructionDuration, setConstructionDuration] = useState(24);
   const [holdPeriod, setHoldPeriod] = useState(84);
 
+  // Gross Buildable Area
+  const [gbaLots, setGbaLots] = useState([
+    { id: 1, useFar: true, landArea: 0, unit: 'ft²', far: 1 },
+  ]);
+  const addGbaLot = () => {
+    const nextId = gbaLots.length > 0 ? Math.max(...gbaLots.map(l => l.id)) + 1 : 1;
+    setGbaLots([...gbaLots, { id: nextId, useFar: true, landArea: 0, unit: 'ft²', far: 1 }]);
+  };
+  const updateGbaLot = (id, field, value) =>
+    setGbaLots(gbaLots.map(l => l.id === id ? { ...l, [field]: value } : l));
+
   // Size
   const [builtGrossSF, setBuiltGrossSF] = useState(65880);
   const [efficiencyRatio, setEfficiencyRatio] = useState(85.0);
@@ -68,10 +79,9 @@ export default function StudentHousingIncome() {
   const leaseTerm = 12;
   const [academicStart, setAcademicStart] = useState('August');
 
-  // Bed mix
+  // Bed mix — default single row linked to numUnits from General Info
   const [rows, setRows] = useState([
-    { id: 1, unitType: '2-Bed / 2-Bath', units: 80, bedsPerUnit: 2, rentPerBed: 850 },
-    { id: 2, unitType: '4-Bed / 4-Bath', units: 60, bedsPerUnit: 4, rentPerBed: 725 },
+    { id: 1, unitType: 'Unit Type 1', units: 140, bedsPerUnit: 1, rentPerBed: 0 },
   ]);
 
   // Operating info – additional fields matching platform
@@ -94,12 +104,17 @@ export default function StudentHousingIncome() {
 
   // Gross income adjustments
 
-  // Other income
+  // Other income (all per bed per month)
   const [concessionsPct, setConcessionsPct] = useState(2);
-  const [parking, setParking] = useState(48000);
-  const [rubs, setRubs] = useState(24000);
+  const [parkingPerBedMo, setParkingPerBedMo] = useState(75);
+  const [parkingGrowth, setParkingGrowth] = useState(3.0);
+  const [rubsPerBedMo, setRubsPerBedMo] = useState(40);
+  const [rubsGrowth, setRubsGrowth] = useState(3.0);
   const [furniturePremium, setFurniturePremium] = useState(25);
-  const [otherIncome, setOtherIncome] = useState(12000);
+  const [furnitureGrowth, setFurnitureGrowth] = useState(3.0);
+  const [furnitureBeds, setFurnitureBeds] = useState(400);
+  const [otherPerBedMo, setOtherPerBedMo] = useState(15);
+  const [otherGrowth, setOtherGrowth] = useState(3.0);
 
   // Calculations
   const calcs = useMemo(() => {
@@ -110,16 +125,19 @@ export default function StudentHousingIncome() {
       : 0;
     const grossPotentialRent = totalBeds * (leaseUpPct / 100) * weightedRent * 12;
     const concessions = grossPotentialRent * (concessionsPct / 100);
-    const furnitureAnnual = totalBeds * furniturePremium * 12;
-    const totalOther = parking + rubs + furnitureAnnual + otherIncome;
+    const parkingAnnual = totalBeds * parkingPerBedMo * 12;
+    const rubsAnnual = totalBeds * rubsPerBedMo * 12;
+    const furnitureAnnual = furnitureBeds * furniturePremium * 12;
+    const otherAnnual = totalBeds * otherPerBedMo * 12;
+    const totalOther = parkingAnnual + rubsAnnual + furnitureAnnual + otherAnnual;
     const totalPotentialIncome = grossPotentialRent - concessions + totalOther;
     return {
       totalUnits, totalBeds, weightedRent,
       grossPotentialRent, concessions,
-      furnitureAnnual, totalOther,
-      totalPotentialIncome,
+      parkingAnnual, rubsAnnual, furnitureAnnual, otherAnnual,
+      totalOther, totalPotentialIncome,
     };
-  }, [rows, concessionsPct, parking, rubs, furniturePremium, otherIncome]);
+  }, [rows, concessionsPct, parkingPerBedMo, rubsPerBedMo, furniturePremium, furnitureBeds, otherPerBedMo]);
 
   // Expenses
   const [expDisplayMode, setExpDisplayMode] = useState('perBed');
@@ -443,6 +461,97 @@ export default function StudentHousingIncome() {
                       </div>
                     </div>
                   </div>
+                  {/* Gross Buildable Area + Stats Cards */}
+                  <div className="sh-gba-row">
+                    <div className="sh-gba-section">
+                      <h5 className="sh-gba-title">Gross buildable area</h5>
+                      <table className="sh-gba-table">
+                        <thead>
+                          <tr>
+                            <th className="sh-gba-th">Lot</th>
+                            <th className="sh-gba-th">Use FAR</th>
+                            <th className="sh-gba-th">Land area</th>
+                            <th className="sh-gba-th"></th>
+                            <th className="sh-gba-th">FAR</th>
+                            <th className="sh-gba-th">Gross buildable area</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {gbaLots.map((lot, idx) => {
+                            const gba = lot.useFar ? lot.landArea * lot.far : lot.landArea;
+                            return (
+                              <tr key={lot.id}>
+                                <td className="sh-gba-td">{idx + 1}</td>
+                                <td className="sh-gba-td">
+                                  <button
+                                    className={`sh-gba-toggle ${lot.useFar ? 'sh-gba-toggle-on' : ''}`}
+                                    onClick={() => updateGbaLot(lot.id, 'useFar', !lot.useFar)}
+                                  >
+                                    <span className="sh-gba-toggle-thumb" />
+                                  </button>
+                                </td>
+                                <td className="sh-gba-td">
+                                  <input
+                                    type="number"
+                                    className="sh-gba-input"
+                                    value={lot.landArea}
+                                    onChange={(e) => updateGbaLot(lot.id, 'landArea', Number(e.target.value))}
+                                  />
+                                </td>
+                                <td className="sh-gba-td">
+                                  <select className="sh-gba-unit-select" value={lot.unit} onChange={(e) => updateGbaLot(lot.id, 'unit', e.target.value)}>
+                                    <option value="ft²">ft²</option>
+                                    <option value="acres">acres</option>
+                                  </select>
+                                </td>
+                                <td className="sh-gba-td">
+                                  {lot.useFar ? (
+                                    <input
+                                      type="number"
+                                      className="sh-gba-input sh-gba-input-narrow"
+                                      value={lot.far}
+                                      onChange={(e) => updateGbaLot(lot.id, 'far', Number(e.target.value))}
+                                      step="0.1"
+                                    />
+                                  ) : (
+                                    <span className="sh-gba-disabled">—</span>
+                                  )}
+                                </td>
+                                <td className="sh-gba-td">
+                                  <div className="sh-gba-computed">
+                                    {fmt(gba)}
+                                    <span className="sh-gba-computed-unit">ft²</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      <button className="sh-gba-add-btn" onClick={addGbaLot}>+ Add lot</button>
+                    </div>
+                    <div className="sh-gba-cards">
+                      <div className="sh-gi-stat-grid">
+                        <div className="sh-opinfo-infobox">
+                          <span className="sh-opinfo-infobox-label">Total beds</span>
+                          <span className="sh-opinfo-infobox-value">{fmt(calcs.totalBeds)}</span>
+                        </div>
+                        <div className="sh-opinfo-infobox">
+                          <span className="sh-opinfo-infobox-label">Net rentable area</span>
+                          <span className="sh-opinfo-infobox-value">{fmt(netRentableSF)}</span>
+                        </div>
+                        <div className="sh-opinfo-infobox">
+                          <span className="sh-opinfo-infobox-label">Total parking spots</span>
+                          <span className="sh-opinfo-infobox-value">{parkingSpaces}</span>
+                        </div>
+                        <div className="sh-opinfo-infobox">
+                          <span className="sh-opinfo-infobox-label">Parking ratio</span>
+                          <span className="sh-opinfo-infobox-value">{calcs.totalBeds > 0 ? (parkingSpaces / calcs.totalBeds).toFixed(2) : '0.00'} / bed</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="sh-gi-two-col">
                     <div className="sh-gi-form">
                       <div className="sh-gi-row">
@@ -463,11 +572,9 @@ export default function StudentHousingIncome() {
                         <span className="sh-gi-label">Est. no. of units</span>
                         <input className="sh-gi-input" type="number" value={numUnits} onChange={(e) => setNumUnits(Number(e.target.value))} />
                       </div>
-                      <div className="sh-gi-row" style={{ paddingLeft: 146 }}>
+                      <div className="sh-gi-row" style={{ paddingLeft: 146, gap: 24 }}>
+                        <span className="sh-gi-sub-text">SF per bed: <strong>{fmt(calcs.totalBeds > 0 ? Math.round(netRentableSF / calcs.totalBeds) : 0)}</strong></span>
                         <span className="sh-gi-sub-text">SF per unit: <strong>{fmt(sfPerUnit)}</strong></span>
-                      </div>
-                      <div className="sh-gi-row" style={{ paddingLeft: 146 }}>
-                        <span className="sh-gi-sub-text">Total beds (from bed mix): <strong>{fmt(calcs.totalBeds)}</strong></span>
                       </div>
                       <div className="sh-gi-divider"></div>
                       <div className="sh-gi-row">
@@ -505,26 +612,6 @@ export default function StudentHousingIncome() {
                       </div>
                       <div className="sh-gi-row" style={{ paddingLeft: 146 }}>
                         <span className="sh-gi-sub-text">SF per floor: <strong>{fmt(Math.round(builtGrossSF / (stories || 1)))}</strong></span>
-                      </div>
-                    </div>
-                    <div className="sh-gi-computed-col">
-                      <div className="sh-gi-stat-grid">
-                        <div className="sh-opinfo-infobox">
-                          <span className="sh-opinfo-infobox-label">Net rentable area</span>
-                          <span className="sh-opinfo-infobox-value">{fmt(netRentableSF)}</span>
-                        </div>
-                        <div className="sh-opinfo-infobox">
-                          <span className="sh-opinfo-infobox-label">Beds/acre</span>
-                          <span className="sh-opinfo-infobox-value" style={{ fontStyle: 'italic', color: '#6c7280' }}>—</span>
-                        </div>
-                        <div className="sh-opinfo-infobox">
-                          <span className="sh-opinfo-infobox-label">Total parking spots</span>
-                          <span className="sh-opinfo-infobox-value">{parkingSpaces}</span>
-                        </div>
-                        <div className="sh-opinfo-infobox">
-                          <span className="sh-opinfo-infobox-label">Parking ratio</span>
-                          <span className="sh-opinfo-infobox-value">{numUnits > 0 ? (parkingSpaces / numUnits).toFixed(2) : '0.00'} / unit</span>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -581,18 +668,18 @@ export default function StudentHousingIncome() {
                         </div>
                       </div>
                       <div className="sh-opinfo-row">
+                        <span className="sh-opinfo-label">Operations start year</span>
+                        <select className="sh-opinfo-select" value={operationStartYear} onChange={(e) => setOperationStartYear(Number(e.target.value))}>
+                          {[2027, 2028, 2029, 2030, 2031].map((yr) => (
+                            <option key={yr} value={yr}>{yr}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="sh-opinfo-row">
                         <span className="sh-opinfo-label">Academic year start</span>
                         <select className="sh-opinfo-select" value={academicStart} onChange={(e) => setAcademicStart(e.target.value)}>
                           <option value="August">August</option>
                           <option value="September">September</option>
-                        </select>
-                      </div>
-                      <div className="sh-opinfo-row">
-                        <span className="sh-opinfo-label">Operation start</span>
-                        <select className="sh-opinfo-select" value={operationStartYear} onChange={(e) => setOperationStartYear(Number(e.target.value))}>
-                          {[2027, 2028, 2029, 2030, 2031].map((yr) => (
-                            <option key={yr} value={yr}>{academicStart} {yr}</option>
-                          ))}
                         </select>
                       </div>
                       <div className="sh-opinfo-row">
@@ -616,7 +703,7 @@ export default function StudentHousingIncome() {
                       <div className="sh-opinfo-infobox-row">
                         <div className="sh-opinfo-infobox">
                           <span className="sh-opinfo-infobox-label">1st stabilized month</span>
-                          <span className="sh-opinfo-infobox-value">{academicStart.substring(0,3)} {operationStartYear + 1} (Month 13)</span>
+                          <span className="sh-opinfo-infobox-value">{academicStart} {operationStartYear}</span>
                         </div>
                         <div className="sh-opinfo-infobox">
                           <span className="sh-opinfo-infobox-label">Lease term</span>
@@ -794,7 +881,9 @@ export default function StudentHousingIncome() {
                           <thead>
                             <tr className="sh-cat-header">
                               <th className="sh-th-label-wide">Other income <span className="sh-th-plus">+</span></th>
-                              <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
+                              <th className="sh-th-metric">Annual Growth</th>
+                              <th className="sh-th-metric">$/bed/mo</th>
+                              <th className="sh-th-metric"># of units</th>
                               <th className="sh-th-metric">Amount/year</th>
                               <MonthHeaders />
                             </tr>
@@ -802,36 +891,41 @@ export default function StudentHousingIncome() {
                           <tbody>
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Parking</td>
-                              <td className="sh-td-metric">{perMetric(parking)}</td>
-                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={parking} onChange={(e) => setParking(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={parkingGrowth} onChange={(e) => setParkingGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={parkingPerBedMo} onChange={(e) => setParkingPerBedMo(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric">{fmtD(calcs.parkingAnnual)}</td>
                               <MonthCells />
                             </tr>
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">RUBS / Utility reimbursements</td>
-                              <td className="sh-td-metric">{perMetric(rubs)}</td>
-                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={rubs} onChange={(e) => setRubs(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={rubsGrowth} onChange={(e) => setRubsGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={rubsPerBedMo} onChange={(e) => setRubsPerBedMo(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric">{fmtD(calcs.rubsAnnual)}</td>
                               <MonthCells />
                             </tr>
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Furniture premium</td>
-                              <td className="sh-td-metric">{perMetric(calcs.furnitureAnnual)}</td>
-                              <td className="sh-td-metric">
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                                  <input type="number" className="sh-cell-input" value={furniturePremium} onChange={(e) => setFurniturePremium(Number(e.target.value))} min={0} style={{ width: 60 }} />
-                                  <span style={{ color: '#6c7280', fontSize: 11 }}>/bed/mo</span>
-                                </div>
-                              </td>
+                              <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={furnitureGrowth} onChange={(e) => setFurnitureGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furniturePremium} onChange={(e) => setFurniturePremium(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furnitureBeds} onChange={(e) => setFurnitureBeds(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric">{fmtD(calcs.furnitureAnnual)}</td>
                               <MonthCells />
                             </tr>
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Other</td>
-                              <td className="sh-td-metric">{perMetric(otherIncome)}</td>
-                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={otherIncome} onChange={(e) => setOtherIncome(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={otherGrowth} onChange={(e) => setOtherGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={otherPerBedMo} onChange={(e) => setOtherPerBedMo(Number(e.target.value))} min={0} /></td>
+                              <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric">{fmtD(calcs.otherAnnual)}</td>
                               <MonthCells />
                             </tr>
                             <tr className="sh-row sh-row-total">
                               <td className="sh-td-label-wide sh-td-bold">Total other income</td>
-                              <td className="sh-td-metric sh-td-bold">{perMetric(calcs.totalOther)}</td>
+                              <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric"></td>
                               <td className="sh-td-metric sh-td-bold">{fmtD(calcs.totalOther)}</td>
                               <MonthCells />
                             </tr>

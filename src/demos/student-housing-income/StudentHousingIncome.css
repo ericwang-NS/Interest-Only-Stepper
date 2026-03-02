@@ -1301,3 +1301,89 @@
   outline: none;
   border-color: #0fb3ff;
 }
+
+/* ── Settings cog dropdown ─────────────── */
+
+.sh-settings-wrap {
+  position: relative;
+}
+
+.sh-settings-cog {
+  background: none;
+  border: 1px solid #353b47;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.sh-settings-cog:hover {
+  background-color: #252a33;
+}
+
+.sh-settings-cog:hover svg {
+  stroke: #c0c4cc;
+}
+
+.sh-settings-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background-color: #1f2430;
+  border: 1px solid #353b47;
+  border-radius: 6px;
+  padding: 10px 16px;
+  min-width: 200px;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sh-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.sh-settings-label {
+  color: #c0c4cc;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
+.sh-settings-toggle-group {
+  display: flex;
+  background-color: #252a33;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #353b47;
+}
+
+.sh-settings-toggle-btn {
+  flex: 1;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  color: #6c7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.sh-settings-toggle-btn:hover {
+  color: #c0c4cc;
+}
+
+.sh-settings-toggle-btn.active {
+  background-color: #0fb3ff;
+  color: #ffffff;
+}

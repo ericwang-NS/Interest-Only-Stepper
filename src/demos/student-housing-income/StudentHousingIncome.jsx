@@ -36,6 +36,7 @@ export default function StudentHousingIncome() {
   const [activeTab, setActiveTab] = useState('operations');
   const [collapsed, setCollapsed] = useState(false);
   const [displayMode, setDisplayMode] = useState('perBed');
+  const [incomeSettingsOpen, setIncomeSettingsOpen] = useState(false);
 
   // General Info state
   const [dealName, setDealName] = useState('Campus View Apartments');
@@ -145,15 +146,17 @@ export default function StudentHousingIncome() {
   const expenses = useMemo(() => {
     const beds = calcs.totalBeds || 1;
     return [
-      { name: 'Property taxes', growth: '3.0%', amount: beds * 1200, millRate: '2.0%' },
-      { name: 'Property insurance', growth: '3.0%', amount: beds * 450 },
-      { name: 'Property management fee', growth: '3.0%', amount: Math.round(calcs.totalPotentialIncome * 0.04) },
-      { name: 'Utilities', growth: '3.0%', amount: beds * 1100 },
-      { name: 'Repairs & maintenance', growth: '3.0%', amount: beds * 500 },
+      { name: 'Contract services', growth: '3.0%', amount: beds * 300 },
       { name: 'General & administrative', growth: '3.0%', amount: beds * 350 },
-      { name: 'Marketing & leasing', growth: '3.0%', amount: beds * 400 },
-      { name: 'Turnover & make-ready', growth: '3.0%', amount: beds * 600 },
+      { name: 'Insurance', growth: '3.0%', amount: beds * 450 },
+      { name: 'Make ready costs', growth: '3.0%', amount: beds * 600 },
+      { name: 'Management fee', growth: '3.0%', amount: Math.round(calcs.totalPotentialIncome * 0.04) },
+      { name: 'Marketing', growth: '3.0%', amount: beds * 400 },
+      { name: 'Payroll', growth: '3.0%', amount: beds * 800 },
+      { name: 'Repairs & maintenance', growth: '3.0%', amount: beds * 500 },
       { name: 'Furniture replacement reserve', growth: '3.0%', amount: beds * 200, conditional: true },
+      { name: 'Utilities', growth: '3.0%', amount: beds * 1100 },
+      { name: 'Property taxes', growth: '3.0%', amount: beds * 1200, millRate: '2.0%' },
     ];
   }, [calcs.totalBeds, calcs.totalPotentialIncome]);
 
@@ -748,10 +751,23 @@ export default function StudentHousingIncome() {
                       <p className="sh-section-subtitle">Student housing revenue by bed with seasonal adjustments</p>
                     </div>
                     <div className="sh-header-right">
-                      <div className="sh-display-toggle">
-                        <button className={`sh-toggle-btn ${displayMode === 'perBed' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setDisplayMode('perBed'); }}>Per Bed</button>
-                        <button className={`sh-toggle-btn ${displayMode === 'perUnit' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setDisplayMode('perUnit'); }}>Per Unit</button>
-                        <button className={`sh-toggle-btn ${displayMode === 'perSF' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setDisplayMode('perSF'); }}>Per SF</button>
+                      <div className="sh-settings-wrap">
+                        <button className="sh-settings-cog" onClick={(e) => { e.stopPropagation(); setIncomeSettingsOpen(!incomeSettingsOpen); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6c7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                          </svg>
+                        </button>
+                        {incomeSettingsOpen && (
+                          <div className="sh-settings-dropdown">
+                            <div className="sh-settings-row">
+                              <span className="sh-settings-label">Display metrics</span>
+                            </div>
+                            <div className="sh-settings-toggle-group">
+                              <button className={`sh-settings-toggle-btn ${displayMode === 'perBed' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setDisplayMode('perBed'); }}>Per Bed</button>
+                              <button className={`sh-settings-toggle-btn ${displayMode === 'perUnit' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setDisplayMode('perUnit'); }}>Per Unit</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className={`sh-caret ${collapsed ? 'sh-caret-down' : ''}`} onClick={() => setCollapsed(!collapsed)} role="button" tabIndex={0}>
                         <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
@@ -776,7 +792,6 @@ export default function StudentHousingIncome() {
                               <th className="sh-th-metric">Beds / Unit</th>
                               <th className="sh-th-metric">Total Beds</th>
                               <th className="sh-th-metric">Rent/Bed (Mo.)</th>
-                              <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
                               <th className="sh-th-metric">Amount/year</th>
                               <MonthHeaders />
                             </tr>
@@ -807,7 +822,6 @@ export default function StudentHousingIncome() {
                                   <td className="sh-td-metric">
                                     <input type="number" className="sh-cell-input" value={r.rentPerBed} onChange={(e) => updateRow(r.id, 'rentPerBed', Number(e.target.value))} min={0} />
                                   </td>
-                                  <td className="sh-td-metric" style={{ color: '#ffffff' }}>{fmtD(rowPerMetric)}</td>
                                   <td className="sh-td-metric" style={{ color: '#ffffff' }}>{fmtD(rowAnnual)}</td>
                                   <MonthCells />
                                 </tr>
@@ -819,7 +833,6 @@ export default function StudentHousingIncome() {
                               <td className="sh-td-metric sh-td-bold"></td>
                               <td className="sh-td-metric sh-td-bold">{fmt(calcs.totalBeds)}</td>
                               <td className="sh-td-metric sh-td-bold"></td>
-                              <td className="sh-td-metric sh-td-bold">{perMetric(calcs.grossPotentialRent)}</td>
                               <td className="sh-td-metric sh-td-bold">{fmtD(calcs.grossPotentialRent)}</td>
                               <MonthCells />
                             </tr>
@@ -847,8 +860,9 @@ export default function StudentHousingIncome() {
                         <table className="sh-table">
                           <thead>
                             <tr className="sh-cat-header">
-                              <th className="sh-th-label-wide">Gross income adjustments</th>
-                              <th className="sh-th-metric">% of Revenue</th>
+                              <th className="sh-th-label-wide" style={{ minWidth: 360, width: 360 }}>Gross income adjustments</th>
+                              <th className="sh-th-metric">% of Gross rent</th>
+                              <th className="sh-th-metric">$/RSF/mo</th>
                               <th className="sh-th-metric">{`$${metricLabel}/yr`}</th>
                               <th className="sh-th-metric">Amount/year</th>
                               <MonthHeaders />
@@ -856,17 +870,19 @@ export default function StudentHousingIncome() {
                           </thead>
                           <tbody>
                             <tr className="sh-row">
-                              <td className="sh-td-label-wide sh-val-blue sh-link">Concessions</td>
+                              <td className="sh-td-label-wide" style={{ minWidth: 360, width: 360 }}>Concessions</td>
                               <td className="sh-td-metric">
                                 <input type="number" className="sh-cell-input" value={concessionsPct} onChange={(e) => setConcessionsPct(Number(e.target.value))} min={0} max={100} style={{ width: 60 }} />
                               </td>
+                              <td className="sh-td-metric sh-val-negative">{calcs.concessions > 0 && netRentableSF > 0 ? fmtNeg(calcs.concessions / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric sh-val-negative">{calcs.concessions > 0 ? fmtNeg(calcs.concessions / (metricDivisor || 1)) : '$0'}</td>
                               <td className="sh-td-metric sh-val-negative">{calcs.concessions > 0 ? fmtNeg(calcs.concessions) : '$0'}</td>
                               <MonthCells />
                             </tr>
                             <tr className="sh-row sh-row-total">
-                              <td className="sh-td-label-wide sh-td-bold">Total adjustments</td>
+                              <td className="sh-td-label-wide sh-td-bold" style={{ minWidth: 360, width: 360 }}>Total adjustments</td>
                               <td className="sh-td-metric sh-td-bold"></td>
+                              <td className="sh-td-metric sh-td-bold sh-val-negative">{netRentableSF > 0 ? fmtNeg(calcs.concessions / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(calcs.concessions / (metricDivisor || 1))}</td>
                               <td className="sh-td-metric sh-td-bold sh-val-negative">{fmtNeg(calcs.concessions)}</td>
                               <MonthCells />
@@ -882,8 +898,9 @@ export default function StudentHousingIncome() {
                             <tr className="sh-cat-header">
                               <th className="sh-th-label-wide">Other income <span className="sh-th-plus">+</span></th>
                               <th className="sh-th-metric">Annual Growth</th>
+                              <th className="sh-th-metric">$/RSF/mo</th>
                               <th className="sh-th-metric">$/bed/mo</th>
-                              <th className="sh-th-metric"># of units</th>
+                              <th className="sh-th-metric"># of beds</th>
                               <th className="sh-th-metric">Amount/year</th>
                               <MonthHeaders />
                             </tr>
@@ -892,6 +909,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Parking</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={parkingGrowth} onChange={(e) => setParkingGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.parkingAnnual / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={parkingPerBedMo} onChange={(e) => setParkingPerBedMo(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric">{fmtD(calcs.parkingAnnual)}</td>
@@ -900,6 +918,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">RUBS / Utility reimbursements</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={rubsGrowth} onChange={(e) => setRubsGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.rubsAnnual / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={rubsPerBedMo} onChange={(e) => setRubsPerBedMo(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric">{fmtD(calcs.rubsAnnual)}</td>
@@ -908,6 +927,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Furniture premium</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={furnitureGrowth} onChange={(e) => setFurnitureGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.furnitureAnnual / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furniturePremium} onChange={(e) => setFurniturePremium(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furnitureBeds} onChange={(e) => setFurnitureBeds(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric">{fmtD(calcs.furnitureAnnual)}</td>
@@ -916,6 +936,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Other</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={otherGrowth} onChange={(e) => setOtherGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
+                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.otherAnnual / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={otherPerBedMo} onChange={(e) => setOtherPerBedMo(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric">{fmtD(calcs.otherAnnual)}</td>
@@ -924,6 +945,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row sh-row-total">
                               <td className="sh-td-label-wide sh-td-bold">Total other income</td>
                               <td className="sh-td-metric"></td>
+                              <td className="sh-td-metric sh-td-bold">{netRentableSF > 0 ? fmtD(calcs.totalOther / netRentableSF / 12) : '$0'}</td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric sh-td-bold">{fmtD(calcs.totalOther)}</td>
@@ -1068,6 +1090,7 @@ export default function StudentHousingIncome() {
                           <tr className="sh-cat-header">
                             <th className="sh-th-label-wide">Operating expenses <span className="sh-th-plus">+</span></th>
                             <th className="sh-th-metric">Annual growth</th>
+                            <th className="sh-th-metric">% of EGR</th>
                             <th className="sh-th-metric">{expSecondaryLabel}</th>
                             <th className="sh-th-metric">Amount/year</th>
                             <MonthHeaders />
@@ -1077,6 +1100,7 @@ export default function StudentHousingIncome() {
                           {expenses.map((exp, i) => {
                             const show = exp.conditional ? furniturePremium > 0 : true;
                             if (!show) return null;
+                            const pctEgr = effectiveGrossIncome > 0 ? (exp.amount / effectiveGrossIncome * 100) : 0;
                             return (
                               <tr key={i} className="sh-row">
                                 <td className="sh-td-label-wide sh-val-blue sh-link">
@@ -1084,6 +1108,7 @@ export default function StudentHousingIncome() {
                                   {exp.millRate && <span className="sh-expense-tag">Mill rate: {exp.millRate}</span>}
                                 </td>
                                 <td className="sh-td-metric sh-val-blue">{exp.growth}</td>
+                                <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={+pctEgr.toFixed(2)} readOnly={false} step="0.01" /><span>%</span></div></td>
                                 <td className="sh-td-metric sh-val-muted">{expSecondaryVal(exp.amount)}</td>
                                 <td className="sh-td-metric sh-val-blue">{fmtD(exp.amount)}</td>
                                 <MonthCells />
@@ -1093,6 +1118,7 @@ export default function StudentHousingIncome() {
                           <tr className="sh-row sh-row-total">
                             <td className="sh-td-label-wide sh-td-bold">Total operating expenses</td>
                             <td className="sh-td-metric sh-td-bold"></td>
+                            <td className="sh-td-metric sh-td-bold"><div className="sh-input-pct"><span>{effectiveGrossIncome > 0 ? (totalOpEx / effectiveGrossIncome * 100).toFixed(2) : '0.00'}%</span></div></td>
                             <td className="sh-td-metric sh-td-bold">{expSecondaryVal(totalOpEx)}</td>
                             <td className="sh-td-metric sh-td-bold">{fmtD(totalOpEx)}</td>
                             <MonthCells />
@@ -1105,6 +1131,7 @@ export default function StudentHousingIncome() {
                         <tbody>
                           <tr className="sh-row sh-row-grand-total">
                             <td className="sh-td-label-wide sh-td-bold">Net operating income</td>
+                            <td className="sh-td-metric"></td>
                             <td className="sh-td-metric"></td>
                             <td className="sh-td-metric sh-td-bold">{expSecondaryVal(noi)}</td>
                             <td className="sh-td-metric sh-td-bold">{fmtD(noi)}</td>
@@ -1119,24 +1146,30 @@ export default function StudentHousingIncome() {
                           <tr className="sh-cat-header">
                             <th className="sh-th-label-wide">Capital expenditures <span className="sh-th-plus">+</span></th>
                             <th className="sh-th-metric">Annual growth</th>
+                            <th className="sh-th-metric">% of EGR</th>
                             <th className="sh-th-metric">{expSecondaryLabel}</th>
                             <th className="sh-th-metric">Amount/year</th>
                             <MonthHeaders />
                           </tr>
                         </thead>
                         <tbody>
-                          {capex.map((exp, i) => (
-                            <tr key={i} className="sh-row">
-                              <td className="sh-td-label-wide sh-val-blue sh-link">{exp.name}</td>
-                              <td className="sh-td-metric sh-val-blue">{exp.growth}</td>
-                              <td className="sh-td-metric sh-val-muted">{expSecondaryVal(exp.amount)}</td>
-                              <td className="sh-td-metric sh-val-blue">{fmtD(exp.amount)}</td>
-                              <MonthCells />
-                            </tr>
-                          ))}
+                          {capex.map((exp, i) => {
+                            const pctEgr = effectiveGrossIncome > 0 ? (exp.amount / effectiveGrossIncome * 100) : 0;
+                            return (
+                              <tr key={i} className="sh-row">
+                                <td className="sh-td-label-wide sh-val-blue sh-link">{exp.name}</td>
+                                <td className="sh-td-metric sh-val-blue">{exp.growth}</td>
+                                <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={+pctEgr.toFixed(2)} step="0.01" /><span>%</span></div></td>
+                                <td className="sh-td-metric sh-val-muted">{expSecondaryVal(exp.amount)}</td>
+                                <td className="sh-td-metric sh-val-blue">{fmtD(exp.amount)}</td>
+                                <MonthCells />
+                              </tr>
+                            );
+                          })}
                           <tr className="sh-row sh-row-total">
                             <td className="sh-td-label-wide sh-td-bold">Total capital expenditures</td>
                             <td className="sh-td-metric sh-td-bold"></td>
+                            <td className="sh-td-metric sh-td-bold"><div className="sh-input-pct"><span>{effectiveGrossIncome > 0 ? (totalCapEx / effectiveGrossIncome * 100).toFixed(2) : '0.00'}%</span></div></td>
                             <td className="sh-td-metric sh-td-bold">{expSecondaryVal(totalCapEx)}</td>
                             <td className="sh-td-metric sh-td-bold">{fmtD(totalCapEx)}</td>
                             <MonthCells />

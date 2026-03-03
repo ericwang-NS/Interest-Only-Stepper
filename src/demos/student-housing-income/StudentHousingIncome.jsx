@@ -116,6 +116,10 @@ export default function StudentHousingIncome() {
   const [furnitureBeds, setFurnitureBeds] = useState(400);
   const [otherPerBedMo, setOtherPerBedMo] = useState(15);
   const [otherGrowth, setOtherGrowth] = useState(3.0);
+  const [parkingRsfMo, setParkingRsfMo] = useState(1.61);
+  const [rubsRsfMo, setRubsRsfMo] = useState(0.86);
+  const [furnitureRsfMo, setFurnitureRsfMo] = useState(0.54);
+  const [otherRsfMo, setOtherRsfMo] = useState(0.32);
 
   // Calculations
   const calcs = useMemo(() => {
@@ -685,22 +689,6 @@ export default function StudentHousingIncome() {
                           <option value="September">September</option>
                         </select>
                       </div>
-                      <div className="sh-opinfo-row">
-                        <span className="sh-opinfo-label">Initial free rent</span>
-                        <div className="sh-stepper">
-                          <button className="sh-stepper-btn" onClick={() => setFreeRent(Math.max(0, freeRent - 1))}>&#8722;</button>
-                          <span className="sh-stepper-value">{freeRent} months</span>
-                          <button className="sh-stepper-btn" onClick={() => setFreeRent(freeRent + 1)}>+</button>
-                        </div>
-                      </div>
-                      <div className="sh-opinfo-row">
-                        <span className="sh-opinfo-label">Stabilized free rent</span>
-                        <div className="sh-stepper">
-                          <button className="sh-stepper-btn" onClick={() => setStabilizedFreeRent(Math.max(0, stabilizedFreeRent - 1))}>&#8722;</button>
-                          <span className="sh-stepper-value">{stabilizedFreeRent} months</span>
-                          <button className="sh-stepper-btn" onClick={() => setStabilizedFreeRent(stabilizedFreeRent + 1)}>+</button>
-                        </div>
-                      </div>
                     </div>
                     <div className="sh-opinfo-computed">
                       <div className="sh-opinfo-infobox-row">
@@ -909,7 +897,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Parking</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={parkingGrowth} onChange={(e) => setParkingGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
-                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.parkingAnnual / netRentableSF / 12) : '$0'}</td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={parkingRsfMo} onChange={(e) => setParkingRsfMo(Number(e.target.value))} step="0.01" min={0} /></td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={parkingPerBedMo} onChange={(e) => setParkingPerBedMo(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric">{fmtD(calcs.parkingAnnual)}</td>
@@ -918,7 +906,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">RUBS / Utility reimbursements</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={rubsGrowth} onChange={(e) => setRubsGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
-                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.rubsAnnual / netRentableSF / 12) : '$0'}</td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={rubsRsfMo} onChange={(e) => setRubsRsfMo(Number(e.target.value))} step="0.01" min={0} /></td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={rubsPerBedMo} onChange={(e) => setRubsPerBedMo(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric">{fmtD(calcs.rubsAnnual)}</td>
@@ -927,7 +915,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Furniture premium</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={furnitureGrowth} onChange={(e) => setFurnitureGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
-                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.furnitureAnnual / netRentableSF / 12) : '$0'}</td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furnitureRsfMo} onChange={(e) => setFurnitureRsfMo(Number(e.target.value))} step="0.01" min={0} /></td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furniturePremium} onChange={(e) => setFurniturePremium(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={furnitureBeds} onChange={(e) => setFurnitureBeds(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric">{fmtD(calcs.furnitureAnnual)}</td>
@@ -936,7 +924,7 @@ export default function StudentHousingIncome() {
                             <tr className="sh-row">
                               <td className="sh-td-label-wide sh-val-blue sh-link">Other</td>
                               <td className="sh-td-metric"><div className="sh-input-pct"><input type="number" className="sh-cell-input" value={otherGrowth} onChange={(e) => setOtherGrowth(Number(e.target.value))} step="0.1" /><span>%</span></div></td>
-                              <td className="sh-td-metric">{netRentableSF > 0 ? fmtD(calcs.otherAnnual / netRentableSF / 12) : '$0'}</td>
+                              <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={otherRsfMo} onChange={(e) => setOtherRsfMo(Number(e.target.value))} step="0.01" min={0} /></td>
                               <td className="sh-td-metric"><input type="number" className="sh-cell-input" value={otherPerBedMo} onChange={(e) => setOtherPerBedMo(Number(e.target.value))} min={0} /></td>
                               <td className="sh-td-metric"></td>
                               <td className="sh-td-metric">{fmtD(calcs.otherAnnual)}</td>

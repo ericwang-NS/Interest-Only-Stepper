@@ -1,0 +1,551 @@
+/* ===================================================
+   Permanent Debt Section — Northspyre Deal Pro Forma
+   Matches Figma node 40650:54479
+   =================================================== */
+
+/* ── Design Tokens ───────────────────────── */
+:root {
+  --pd-bg-level5: #2c3039;
+  --pd-bg-level4: #333742;
+  --pd-bg-level3: #3b3f4c;
+  --pd-bg-level2: #424655;
+  --pd-bg-level1: #494e5e;
+  --pd-fg-default: #fefefe;
+  --pd-fg-low: #a2adb9;
+  --pd-primary: #0fb3ff;
+  --pd-border: #4f5b69;
+  --pd-table-header: #525d6b;
+  --pd-table-2nd: #464e5b;
+  --pd-secondary-00: #a2adb9;
+  --pd-secondary-02: #818c99;
+  --pd-secondary-04: #606b79;
+}
+
+/* ── Page & Container ────────────────────── */
+
+.pd-page {
+  min-height: 100vh;
+  background-color: var(--pd-bg-level4);
+  font-family: "Roboto", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 0;
+}
+
+.pd-container {
+  width: 100%;
+}
+
+/* ── Card ────────────────────────────────── */
+
+.pd-card {
+  background-color: var(--pd-bg-level5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────── */
+
+.pd-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background-color: var(--pd-bg-level3);
+}
+
+.pd-step-num {
+  color: var(--pd-fg-low);
+  font-size: 16px;
+  font-weight: 400;
+  width: 21px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.pd-header-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pd-title {
+  color: var(--pd-fg-default);
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+  line-height: normal;
+}
+
+.pd-subtitle {
+  color: var(--pd-fg-low);
+  font-size: 12px;
+  font-weight: 400;
+  margin: 0;
+  line-height: normal;
+}
+
+/* ── Toggle ──────────────────────────────── */
+
+.pd-toggle {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.pd-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.pd-toggle-track {
+  width: 30px;
+  height: 16px;
+  background-color: #4a5060;
+  border-radius: 28px;
+  position: relative;
+  transition: background-color 0.2s;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.pd-toggle input:checked + .pd-toggle-track {
+  background-color: var(--pd-primary);
+  justify-content: flex-end;
+}
+
+.pd-toggle-thumb {
+  width: 12px;
+  height: 12px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: block;
+  transition: all 0.2s;
+}
+
+/* ── Panels (form + summary) ─────────────── */
+
+.pd-panels {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  padding-top: 16px;
+}
+
+/* ── Form (left) ─────────────────────────── */
+
+.pd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 338px;
+}
+
+.pd-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 34px;
+}
+
+.pd-field-label {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  width: 137px;
+  flex-shrink: 0;
+}
+
+/* ── Dropdown ────────────────────────────── */
+
+.pd-dropdown-wrap {
+  position: relative;
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.pd-dropdown-wide {
+  width: 180px;
+}
+
+.pd-dropdown {
+  width: 100%;
+  background-color: var(--pd-bg-level1);
+  border: none;
+  border-radius: 4px;
+  color: var(--pd-fg-default);
+  font-size: 14px;
+  font-family: "Roboto", sans-serif;
+  padding: 8px 32px 8px 16px;
+  cursor: pointer;
+  appearance: none;
+  line-height: 18px;
+}
+
+.pd-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--pd-primary);
+}
+
+.pd-dropdown-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--pd-fg-default);
+  pointer-events: none;
+}
+
+/* ── Stepper ─────────────────────────────── */
+
+.pd-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--pd-bg-level1);
+  border-radius: 4px;
+  padding: 8px 12px 8px 16px;
+  width: 180px;
+  box-sizing: border-box;
+}
+
+.pd-stepper-btn {
+  background: none;
+  border: none;
+  color: var(--pd-secondary-00);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: "Roboto", sans-serif;
+  transition: color 0.15s;
+}
+
+.pd-stepper-btn:hover:not(:disabled) {
+  color: var(--pd-fg-default);
+}
+
+.pd-stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pd-stepper-val {
+  flex: 1;
+  color: var(--pd-fg-default);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+  user-select: none;
+  line-height: 18px;
+}
+
+.pd-stepper-io {
+  width: 180px;
+}
+
+/* ── Divider ─────────────────────────────── */
+
+.pd-divider {
+  height: 1px;
+  background-color: var(--pd-border);
+  width: 333px;
+  opacity: 0.4;
+}
+
+/* ── Summary cards (right) ───────────────── */
+
+.pd-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.pd-summary-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pd-summary-card {
+  flex: 1;
+  background-color: var(--pd-bg-level2);
+  border-radius: 4px;
+  padding: 16px;
+  height: 62px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pd-summary-card--has-action {
+  position: relative;
+  cursor: pointer;
+}
+
+.pd-summary-caret {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--pd-fg-default);
+}
+
+.pd-summary-label {
+  color: var(--pd-fg-low);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.pd-summary-value {
+  color: var(--pd-fg-default);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+}
+
+/* ── Table Area ──────────────────────────── */
+
+.pd-table-area {
+  padding-left: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pd-table-scroll {
+  display: flex;
+  overflow: hidden;
+  border-radius: 4px 0 0 4px;
+}
+
+.pd-table-frozen {
+  flex-shrink: 0;
+  min-width: 900px;
+  box-shadow: 2px 0 25px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  position: relative;
+}
+
+.pd-table-months {
+  flex: 1;
+  overflow-x: auto;
+  z-index: 1;
+}
+
+.pd-table-months::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pd-table-months::-webkit-scrollbar-track {
+  background: var(--pd-bg-level5);
+}
+
+.pd-table-months::-webkit-scrollbar-thumb {
+  background: var(--pd-border);
+  border-radius: 3px;
+}
+
+/* ── Table ───────────────────────────────── */
+
+.pd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Roboto", sans-serif;
+  table-layout: fixed;
+}
+
+.pd-table-frozen .pd-table {
+  min-width: 900px;
+}
+
+.pd-table-months .pd-table {
+  min-width: fit-content;
+}
+
+/* Header cells */
+.pd-th {
+  background-color: var(--pd-table-header);
+  color: var(--pd-fg-default);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 16px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--pd-border);
+  height: 49px;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+.pd-th-label {
+  text-align: left;
+  min-width: 240px;
+  width: 240px;
+  border-right: 2px solid var(--pd-border);
+}
+
+.pd-th-metric {
+  /* auto width, distributed evenly */
+}
+
+.pd-th-month {
+  min-width: 140px;
+  width: 140px;
+  padding: 8px 16px;
+  vertical-align: middle;
+}
+
+.pd-month-num {
+  display: block;
+  color: var(--pd-fg-low);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: right;
+  line-height: normal;
+}
+
+.pd-month-date {
+  display: block;
+  color: var(--pd-fg-default);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  line-height: normal;
+}
+
+/* Category (2nd level) rows */
+.pd-row-cat td {
+  background-color: var(--pd-table-2nd);
+  border-bottom: 1px solid var(--pd-border);
+  height: 46px;
+  box-sizing: border-box;
+}
+
+.pd-td {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--pd-fg-default);
+  white-space: nowrap;
+}
+
+.pd-td-label {
+  text-align: left;
+  min-width: 240px;
+  width: 240px;
+  border-right: 2px solid var(--pd-border);
+}
+
+.pd-td-val {
+  text-align: right;
+}
+
+.pd-td-bold {
+  font-weight: 700;
+}
+
+/* ── Cash Flow After Financing ───────────── */
+
+.pd-cashflow-area {
+  padding: 0 0 24px 16px;
+}
+
+.pd-cashflow-scroll {
+  display: flex;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.pd-cashflow-frozen {
+  flex-shrink: 0;
+  min-width: 900px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  position: relative;
+}
+
+.pd-cashflow-months {
+  flex: 1;
+  overflow-x: auto;
+  z-index: 1;
+}
+
+.pd-table-cashflow {
+  table-layout: fixed;
+}
+
+.pd-cashflow-frozen .pd-table-cashflow {
+  min-width: 900px;
+}
+
+.pd-row-cashflow td {
+  background-color: var(--pd-table-header);
+  border-bottom: 1px solid var(--pd-border);
+  height: 46px;
+  box-sizing: border-box;
+}
+
+.pd-row-cashflow .pd-td-label {
+  min-width: 240px;
+  width: 240px;
+  border-right: 2px solid var(--pd-secondary-02);
+}
+
+.pd-row-cashflow .pd-td-val {
+  min-width: 140px;
+}
+
+.pd-cashflow-frozen .pd-row-cashflow .pd-td-val {
+  border-right: 2px solid var(--pd-secondary-04);
+  text-align: right;
+  padding-left: 24px;
+}
+
+/* ── Spacing between table + cashflow ────── */
+
+.pd-table-area + .pd-cashflow-area {
+  margin-top: 0;
+}
+
+/* ── Responsive ──────────────────────────── */
+
+@media (max-width: 1100px) {
+  .pd-panels {
+    flex-direction: column;
+  }
+
+  .pd-form {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .pd-panels {
+    padding: 12px;
+  }
+
+  .pd-summary-row {
+    flex-direction: column;
+  }
+
+  .pd-table-frozen,
+  .pd-cashflow-frozen {
+    min-width: 600px;
+  }
+}
